@@ -59,8 +59,8 @@ namespace AStar
         [ContextMenu("GenerateGrid")]
         public virtual void GenerateGrid()
         {
-            _elementMoveCostDirection = new IntVector3(0, (int)(10 * ((_gridElementSize.x + _gridElementSize.y + _gridElementSize.z) / 3f)), 
-                (int)(10 * (Mathf.Sqrt(Mathf.Pow(_gridElementSize.x, 2f) + Mathf.Pow(_gridElementSize.y, 2f) + Mathf.Pow(_gridElementSize.z, 2f)))));
+            _elementMoveCostDirection = new IntVector3(0, Mathf.CeilToInt((_gridElementSize.x + _gridElementSize.y) / 2f), 
+                Mathf.CeilToInt(Mathf.Sqrt(Mathf.Pow(_gridElementSize.x, 2f) + Mathf.Pow(_gridElementSize.y, 2f) + Mathf.Pow(_gridElementSize.z, 2f))));
 
             switch (_gridType)
             {
@@ -257,6 +257,32 @@ namespace AStar
             this.x = x;
             this.y = y;
             this.z = z;
+        }
+
+        public IntVector3(IntVector3 other)
+        {
+            this.x = other.x;
+            this.y = other.y;
+            this.z = other.z;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null) return false;
+            IntVector3 objAsIntVec = obj as IntVector3;
+            if (objAsIntVec == null) return false;
+            return Equals(objAsIntVec);
+        }
+
+        public override int GetHashCode()
+        {
+            return x*y*z;
+        }
+
+        public bool Equals(IntVector3 other)
+        {
+            if (other == null) return false;
+            return x == other.x && y == other.y && z == other.z;
         }
     }
 }

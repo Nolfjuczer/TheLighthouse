@@ -41,8 +41,6 @@ namespace AStar
                 {
                     case GridType.TwoDimensional:
                     {
-                        Debug.Log( agent.MyGrid.Elements.Length);
-                            
                             List<GridElement> leftPoints = new List<GridElement>();
                             List<GridElement> middlePoints = new List<GridElement>();
                             List<GridElement> rightPoints = new List<GridElement>();
@@ -69,8 +67,8 @@ namespace AStar
                                     middlePoints.Clear();
                                     rightPoints.Clear();
 
-                                    xMax /= 2;
-                                    yMax /= 2;
+                                    xMax = Mathf.CeilToInt(xMax/2f);
+                                    yMax = Mathf.CeilToInt(yMax/2f);
 
                                     leftPoints.Add(agent.MyGrid.Elements[xMin, yMin, 0]);
                                     leftPoints.Add(agent.MyGrid.Elements[xMin, yMax / 2, 0]);
@@ -92,7 +90,7 @@ namespace AStar
                                     rightPoints.Clear();
 
                                     xMin = xMax / 2;
-                                    yMax /= 2;
+                                    yMax = Mathf.CeilToInt(yMax/2f);
 
                                     leftPoints.Add(agent.MyGrid.Elements[xMin, yMin, 0]);
                                     leftPoints.Add(agent.MyGrid.Elements[xMin, yMax / 2, 0]);
@@ -113,7 +111,7 @@ namespace AStar
                                     middlePoints.Clear();
                                     rightPoints.Clear();
 
-                                    xMax /= 2;
+                                    xMax = Mathf.CeilToInt(xMax/2f);
                                     yMin = yMax / 2;
 
                                     leftPoints.Add(agent.MyGrid.Elements[xMin, yMin, 0]);
@@ -232,6 +230,13 @@ namespace AStar
 
             _openElements.Clear();
             _closedElements.Clear();
+
+            if (!_targetElement.Walkable)
+            {
+                Debug.LogWarning("Target isn't Walkable!");
+                return;
+            }
+
             _startElement.PathParentField = null;
             int lowestCost = 0,openSize = 0;
 
@@ -256,8 +261,9 @@ namespace AStar
                 }
                 _openElements.Remove(_currentElement);
                 _closedElements.Add(_currentElement);
-
-                if (_currentElement.ElementIndex == _targetElement.ElementIndex)
+                GridElement element = _currentElement;//debug
+                GridElement target = _targetElement;//debug
+                if (_currentElement.Equals(_targetElement))
                 {
                     complete = true;
                     break;
@@ -274,45 +280,45 @@ namespace AStar
                     agent.Path.Add(step);
                     step = step.PathParentField;
                 } while (step != null);
-
                 agent.Path.Reverse();
             }
         }
 
         private static void CheckNeighbours(Grid grid)
         {
-            IntVector3 index = _currentElement.ElementIndex;
+            GridElement element = _currentElement;//debug
+            IntVector3 index = new IntVector3(_currentElement.ElementIndex);
             index.x -= 1;
             CheckNeighbourHelper(grid, index);
 
-            index = _currentElement.ElementIndex;
+            index = new IntVector3(_currentElement.ElementIndex);
             index.x += 1;
             CheckNeighbourHelper(grid, index);
 
-            index = _currentElement.ElementIndex;
+            index = new IntVector3(_currentElement.ElementIndex);
             index.y -= 1;
             CheckNeighbourHelper(grid, index);
 
-            index = _currentElement.ElementIndex;
+            index = new IntVector3(_currentElement.ElementIndex);
             index.y += 1;
             CheckNeighbourHelper(grid, index);
 
-            index = _currentElement.ElementIndex;
+            index = new IntVector3(_currentElement.ElementIndex);
             index.x -= 1;
             index.y -= 1;
             CheckNeighbourHelper(grid, index);
 
-            index = _currentElement.ElementIndex;
+            index = new IntVector3(_currentElement.ElementIndex);
             index.x -= 1;
             index.y += 1;
             CheckNeighbourHelper(grid, index);
 
-            index = _currentElement.ElementIndex;
+            index = new IntVector3(_currentElement.ElementIndex);
             index.x += 1;
             index.y -= 1;
             CheckNeighbourHelper(grid, index);
 
-            index = _currentElement.ElementIndex;
+            index = new IntVector3(_currentElement.ElementIndex);
             index.x += 1;
             index.y += 1;
             CheckNeighbourHelper(grid, index);
@@ -322,6 +328,7 @@ namespace AStar
         {
             if (IsIndexInGrid(grid, index))
             {
+                List<GridElement> closed = _closedElements; //debug
                 GridElement element = grid.Elements[index.x, index.y, index.z];
                 if (element.Walkable && !_closedElements.Contains(element))
                 {

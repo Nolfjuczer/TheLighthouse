@@ -100,7 +100,24 @@ namespace AStar
 
         public virtual void CalculateHeuristic(GridElement element)
         {
-            _heuristicCost = Mathf.FloorToInt(Vector3.Distance(gameObject.transform.position, element.transform.position));
+            _heuristicCost = Mathf.CeilToInt(Vector3.Distance(gameObject.transform.position, element.transform.position));
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null) return false;
+            GridElement objAsGridElement = obj as GridElement;
+            if (objAsGridElement == null) return false;
+            return Equals(objAsGridElement);
+        }
+        public override int GetHashCode()
+        {
+            return _elementIndex.x * _elementIndex.y * _elementIndex.z;
+        }
+        public bool Equals(GridElement other)
+        {
+            if (other == null) return false;
+            return _elementIndex.Equals(other._elementIndex);
         }
     }
 }
