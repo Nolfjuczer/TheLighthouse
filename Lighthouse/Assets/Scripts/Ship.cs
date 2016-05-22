@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections;
-using Debug = UnityEngine.Debug;
+using UnityEngine.UI;
 
 public class Ship : WandererBehavior
 {
@@ -17,40 +17,51 @@ public class Ship : WandererBehavior
         get { return _captured;}
     }
 
-    private SpriteRenderer _spriteRenderer;
-    private float _speedMultiplier = 0.3f;
+    private SpriteRenderer _renderer;
+    private Image _image;
+    private float _speedMultiplier = 0.2f;
     private float _captureTimer;
     private bool _captured;
+    private Vector2 _wanderDestination;
+    private TrailRenderer _trailRenderer;
 
-    private Transform _lightHouseTransfrom;
-
-    public void Awake()
+    public override void Awake()
     {
-        _lightHouseTransfrom = FindObjectOfType<Port>().transform;
-        if (_lightHouseTransfrom == null)
-        {
-            Debug.LogError("Coldn't find Lighthouse!");
-            gameObject.SetActive(false);
-        }
+        base.Awake();
+        _trailRenderer = transform.GetComponentInChildren<TrailRenderer>();
+        _renderer = GetComponent<SpriteRenderer>();
 
-        _spriteRenderer = GetComponent<SpriteRenderer>();
+        _trailRenderer.sortingLayerID = _renderer.sortingLayerID;
+        _trailRenderer.sortingOrder = _renderer.sortingOrder - 1;
     }
 
-    // Use this for initialization
     public override void OnEnable ()
     {
         base.OnEnable();        
+        gameObject.transform.localScale = Vector3.one;
+
         WanderDistance /= ShipManoeuvrability;
         WanderRadius *= ShipManoeuvrability;
-        //WanderJitter *= ShipManoeuvrability;
 
         _captureTimer = 0f;
         _captured = false;
 
-        _spriteRenderer.color = Color.white;
+        _renderer.color = Color.white;
+        _trailRenderer.enabled = true;
+        StartCoroutine(WandererCoroutine());
+    }
+
+    public IEnumerator WandererCoroutine()
+    {
+        _wanderDestination = GameController.Instance.IslandTransfrom.position - gameObject.transform.position;
+        yield return new WaitForSeconds(5f);
+        while (true)
+        {
+            _wanderDestination = Wander();
+            yield return new WaitForSeconds(1f);
+        }
     }
 	
-	// Update is called once per frame
 	void Update ()
 	{
 	    ShipMovement();
@@ -58,12 +69,18 @@ public class Ship : WandererBehavior
 
     public void GetToPort()
     {
-        Debug.Log("GotALandCapitan");
         StartCoroutine(ArriveToLand());
+    }
+
+    public void DestoryOnIsland()
+    {
+        if(_image != null) GameController.Instance.ReturnProgressCircle(_image);
+        GameController.Instance.ReturnShip(this);
     }
 
     private IEnumerator ArriveToLand()
     {
+        _trailRenderer.enabled = false;
         float landTimer = 3f;
         while (landTimer > 0f)
         {
@@ -77,9 +94,10 @@ public class Ship : WandererBehavior
 
     private void CleanShip()
     {
-        //TODO give points
-        //TODO back to pool
         transform.localScale = Vector3.one;
+        if(_image != null) GameController.Instance.ReturnProgressCircle(_image);
+        //TODO give points
+        GameController.Instance.ReturnShip(this);
         gameObject.SetActive(false);
     }
 
@@ -87,26 +105,30 @@ public class Ship : WandererBehavior
     {
         if (_captured || _captureTimer > 0f)
         {
-            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, _lightHouseTransfrom.position - gameObject.transform.position), Time.deltaTime * 0.2f * ShipManoeuvrability);
+            transform.rotation = Quaternion.Lerp(transform.rotation, 
+                Quaternion.LookRotation(Vector3.forward, GameController.Instance.IslandTransfrom.position - gameObject.transform.position), 
+                Time.deltaTime * 0.15f * ShipManoeuvrability);
         }
         else
         {
-            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, Wander()), Time.deltaTime * 0.5f);
+            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, _wanderDestination), Time.deltaTime * 0.15f);
         }
-        transform.position += transform.up * ShipSpeed * Time.deltaTime * _speedMultiplier;            
+        transform.position += transform.up.normalized * ShipSpeed * Time.deltaTime * _speedMultiplier;            
     }
 
     private IEnumerator CaptureByLightHouse()
     {
+        _image = GameController.Instance.GetProgressCricle(gameObject.transform.position);
         while (_captureTimer < CaptureTime)
         {
             _captureTimer += Time.deltaTime;
-            _spriteRenderer.color = Color.Lerp(Color.white, Color.green, _captureTimer / CaptureTime);
+            _image.fillAmount = _captureTimer/CaptureTime;
+            GameController.Instance.SetCirclePosition(_image, gameObject.transform.position);
             yield return null;
         }
-        _captureTimer = CaptureTime;
+        _renderer.color = Color.green;
         _captured = true;
-        Debug.Log("Captured!");
+        GameController.Instance.ReturnProgressCircle(_image);
     }
 
     public void OnTriggerEnter2D(Collider2D col2D)
@@ -125,7 +147,7 @@ public class Ship : WandererBehavior
         {
             StopCoroutine("CaptureByLightHouse");
             _captureTimer = 0f;
-            _spriteRenderer.color = Color.white;
+            GameController.Instance.ReturnProgressCircle(_image);
         }
     }
 }

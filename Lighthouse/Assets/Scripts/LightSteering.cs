@@ -23,8 +23,8 @@ public class LightSteering : MonoBehaviour
         {
             if (_targeted && InputManager.Instance.PreviousFrameTouch)
             {
-                Vector2 prev = Camera.main.ScreenToWorldPoint(InputManager.Instance.PreviousTouchPosition);
-                Vector2 cur = Camera.main.ScreenToWorldPoint(InputManager.Instance.TouchPosition);
+                Vector2 prev = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.PreviousTouchPosition);
+                Vector2 cur = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.TouchPosition);
 
                 float angle = Vector2.Angle(prev, cur);
 
@@ -35,7 +35,7 @@ public class LightSteering : MonoBehaviour
             }
             else
             {
-                Ray ray = Camera.main.ScreenPointToRay(InputManager.Instance.TouchPosition);
+                Ray ray = GameController.Instance.MainCamera.ScreenPointToRay(InputManager.Instance.TouchPosition);
                 RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
                 if (hit.collider != null)
                 {

@@ -51,7 +51,7 @@ SubShader {
 			fixed4 frag (v2f i) : SV_Target
 			{
 				fixed4 col = tex2D(_MainTex, i.texcoord);
-				col.a = _Alpha;
+				col.a = col.a * _Alpha;
 				UNITY_APPLY_FOG(i.fogCoord, col);
 				return col;
 			}
