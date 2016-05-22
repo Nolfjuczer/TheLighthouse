@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections;
+using AStar;
 using UnityEngine.UI;
 
 public class Ship : WandererBehavior
@@ -18,21 +19,45 @@ public class Ship : WandererBehavior
     }
 
     private SpriteRenderer _renderer;
-    private Image _image;
+    private Image _circleImage;
     private float _speedMultiplier = 0.2f;
     private float _captureTimer;
     private bool _captured;
     private Vector2 _wanderDestination;
     private TrailRenderer _trailRenderer;
+    private AStarAgent _myAgent;
+    private WaterGridElement _currentElement;
 
     public override void Awake()
     {
         base.Awake();
-        _trailRenderer = transform.GetComponentInChildren<TrailRenderer>();
         _renderer = GetComponent<SpriteRenderer>();
+        if (_renderer == null)
+        {
+            Debug.LogWarning("There's no renderer attached");
+            gameObject.SetActive(false);
+            return;
+        }
+        _trailRenderer = transform.GetComponentInChildren<TrailRenderer>();
+        if (_trailRenderer == null)
+        {
+            Debug.LogWarning("There's no trail renderer attached");
+            gameObject.SetActive(false);
+            return;
+        }
 
         _trailRenderer.sortingLayerID = _renderer.sortingLayerID;
         _trailRenderer.sortingOrder = _renderer.sortingOrder - 1;
+
+        _myAgent = GetComponent<AStarAgent>();
+        if (_myAgent == null)
+        {
+            Debug.LogWarning("There's no agent attached");
+            gameObject.SetActive(false);
+            return;
+        }
+        _myAgent.MyGrid = GameController.Instance.MainGrid;
+        _myAgent.TargetObject = GameController.Instance.IslandTransfrom;
     }
 
     public override void OnEnable ()
@@ -62,7 +87,7 @@ public class Ship : WandererBehavior
         }
     }
 	
-	void Update ()
+	public void Update ()
 	{
 	    ShipMovement();
 	}
@@ -74,12 +99,17 @@ public class Ship : WandererBehavior
 
     public void DestoryOnIsland()
     {
-        if(_image != null) GameController.Instance.ReturnProgressCircle(_image);
+        if(_circleImage != null) GameController.Instance.ReturnProgressCircle(_circleImage);
         GameController.Instance.ReturnShip(this);
     }
 
     private IEnumerator ArriveToLand()
     {
+        foreach (GridElement element in _myAgent.Path)
+        {
+            WaterGridElement waterElement = element as WaterGridElement;
+            if (waterElement != null) waterElement.MyRenderer.enabled = false;
+        }
         _trailRenderer.enabled = false;
         float landTimer = 3f;
         while (landTimer > 0f)
@@ -95,7 +125,7 @@ public class Ship : WandererBehavior
     private void CleanShip()
     {
         transform.localScale = Vector3.one;
-        if(_image != null) GameController.Instance.ReturnProgressCircle(_image);
+        if(_circleImage != null) GameController.Instance.ReturnProgressCircle(_circleImage);
         //TODO give points
         GameController.Instance.ReturnShip(this);
         gameObject.SetActive(false);
@@ -103,32 +133,56 @@ public class Ship : WandererBehavior
 
     private void ShipMovement()
     {
-        if (_captured || _captureTimer > 0f)
+        if (_captured)
         {
-            transform.rotation = Quaternion.Lerp(transform.rotation, 
-                Quaternion.LookRotation(Vector3.forward, GameController.Instance.IslandTransfrom.position - gameObject.transform.position), 
-                Time.deltaTime * 0.15f * ShipManoeuvrability);
+            GameController.Instance.SetCirclePosition(_circleImage, gameObject.transform.position); //new idea
+            //transform.rotation = Quaternion.Lerp(transform.rotation, 
+            //    Quaternion.LookRotation(Vector3.forward, GameController.Instance.IslandTransfrom.position - gameObject.transform.position), 
+            //    Time.deltaTime * 0.15f * ShipManoeuvrability);
+            if (_currentElement != null)
+            {
+                transform.rotation = Quaternion.Lerp(transform.rotation,
+                    Quaternion.LookRotation(Vector3.forward, _currentElement.transform.position - gameObject.transform.position),
+                    Time.deltaTime * /*0.15f **/ ShipManoeuvrability);
+                if( Vector3.Distance(transform.position, _currentElement.transform.position) < 0.2f) NextGridElement();                         
+            }
         }
         else
         {
             transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, _wanderDestination), Time.deltaTime * 0.15f);
         }
-        transform.position += transform.up.normalized * ShipSpeed * Time.deltaTime * _speedMultiplier;            
+        transform.position += transform.up.normalized * ShipSpeed * Time.deltaTime * _speedMultiplier;   
     }
 
     private IEnumerator CaptureByLightHouse()
     {
-        _image = GameController.Instance.GetProgressCricle(gameObject.transform.position);
+        _circleImage = GameController.Instance.GetProgressCricle(gameObject.transform.position);
         while (_captureTimer < CaptureTime)
         {
             _captureTimer += Time.deltaTime;
-            _image.fillAmount = _captureTimer/CaptureTime;
-            GameController.Instance.SetCirclePosition(_image, gameObject.transform.position);
+            _circleImage.fillAmount = _captureTimer/CaptureTime;
+            GameController.Instance.SetCirclePosition(_circleImage, gameObject.transform.position); //new idea
             yield return null;
         }
+        _myAgent.CalculatePath();
+        _myAgent.Path.RemoveAt(0);
+        foreach (GridElement element in _myAgent.Path)
+        {
+            WaterGridElement waterElement = element as WaterGridElement;
+            if(waterElement != null) waterElement.MyRenderer.enabled = true;
+        }
+        NextGridElement();
         _renderer.color = Color.green;
         _captured = true;
-        GameController.Instance.ReturnProgressCircle(_image);
+        //GameController.Instance.ReturnProgressCircle(_circleImage);
+    }
+
+    protected void NextGridElement()
+    {
+        if (_myAgent.Path.Count == 0) return;
+        if(_currentElement != null) _currentElement.MyRenderer.enabled = false;
+        _currentElement = _myAgent.Path[0] as WaterGridElement;
+        _myAgent.Path.RemoveAt(0);
     }
 
     public void OnTriggerEnter2D(Collider2D col2D)
@@ -147,7 +201,7 @@ public class Ship : WandererBehavior
         {
             StopCoroutine("CaptureByLightHouse");
             _captureTimer = 0f;
-            GameController.Instance.ReturnProgressCircle(_image);
+            GameController.Instance.ReturnProgressCircle(_circleImage);
         }
     }
 }

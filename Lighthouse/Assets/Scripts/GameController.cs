@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 public class GameController : Singleton<GameController>
 {
+    public AStar.Grid MainGrid;
     public Transform IslandTransfrom;
     public Camera MainCamera;
 
@@ -51,16 +52,16 @@ public class GameController : Singleton<GameController>
 
     #region Ships
     public Transform ShipParentTransform;
-    public Ship Keelboat;
-    public Ship MotorshipTempalte;
-    public Ship FerryTemplate;
-    public Ship FreighterTemplate;
+    public GameObject Keelboat;
+    public GameObject MotorshipTempalte;
+    public GameObject FerryTemplate;
+    public GameObject FreighterTemplate;
     public List<Ship> PossibleShips;
 
     public Ship GetShip()
     {
         Ship ship;
-        if (PossibleCircles.Count > 0)
+        if (PossibleShips.Count > 0)
         {
             ship = PossibleShips[Random.Range(0,PossibleShips.Count - 1)];
             PossibleShips.Remove(ship);

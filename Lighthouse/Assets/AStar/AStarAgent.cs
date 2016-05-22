@@ -11,6 +11,7 @@ namespace AStar
         public Grid MyGrid
         {
             get { return _myGrid; }
+            set { _myGrid = value; }
         }
 
         [SerializeField]
@@ -57,7 +58,7 @@ namespace AStar
         [ContextMenu("CalculatePath")]
         public virtual void CalculatePath()
         {
-            OnEnable(); // can delete later
+            OnEnable();
             _path.Clear();
             AStar.GetStaringElement(this, _useMyPositionAsStart ? transform.position : StartPosition);
             AStar.GetTargetElement(this, _targetObject == null ? _targetPosition : _targetObject.position);

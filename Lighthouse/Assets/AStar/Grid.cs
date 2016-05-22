@@ -56,6 +56,11 @@ namespace AStar
         [SerializeField]
         protected LayerMask _collisionLayers;
 
+        public void Awake()
+        {
+            RegenerateGrid();
+        }
+
         [ContextMenu("GenerateGrid")]
         public virtual void GenerateGrid()
         {
