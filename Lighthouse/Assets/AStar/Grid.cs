@@ -64,7 +64,7 @@ namespace AStar
         [ContextMenu("GenerateGrid")]
         public virtual void GenerateGrid()
         {
-            _elementMoveCostDirection = new IntVector3(0, Mathf.CeilToInt((_gridElementSize.x + _gridElementSize.y) / 2f), 
+            _elementMoveCostDirection = new IntVector3(Mathf.CeilToInt((_gridElementSize.x + _gridElementSize.y) / 2f), Mathf.CeilToInt(Mathf.Sqrt(Mathf.Pow(_gridElementSize.x, 2f) + Mathf.Pow(_gridElementSize.y, 2f))), 
                 Mathf.CeilToInt(Mathf.Sqrt(Mathf.Pow(_gridElementSize.x, 2f) + Mathf.Pow(_gridElementSize.y, 2f) + Mathf.Pow(_gridElementSize.z, 2f))));
 
             switch (_gridType)

@@ -156,7 +156,11 @@ public class Ship : WandererBehavior
 
     private IEnumerator CaptureByLightHouse()
     {
-        _circleImage = GameController.Instance.GetProgressCricle(gameObject.transform.position);
+        if(_circleImage == null)
+            _circleImage = GameController.Instance.GetProgressCricle(gameObject.transform.position);
+        _circleImage.enabled = true;
+        _circleImage.gameObject.SetActive(true);
+        _circleImage.rectTransform.localScale = new Vector3(0.8f,0.8f,1f);
         while (_captureTimer < CaptureTime)
         {
             _captureTimer += Time.deltaTime;
@@ -174,7 +178,6 @@ public class Ship : WandererBehavior
         NextGridElement();
         _renderer.color = Color.green;
         _captured = true;
-        //GameController.Instance.ReturnProgressCircle(_circleImage);
     }
 
     protected void NextGridElement()

@@ -26,7 +26,7 @@ public class GameController : Singleton<GameController>
         {
             GameObject tmpObject = Instantiate(ProgressCircleTemplate, ProgressCircleTemplate.transform.position, Quaternion.identity) as GameObject;
             img = tmpObject.GetComponent<Image>();
-            img.rectTransform.parent = MainCanvasRectTransform;
+            img.rectTransform.SetParent(MainCanvasRectTransform, false);
         }
         SetCirclePosition(img, shipPosition);
         img.gameObject.SetActive(true);

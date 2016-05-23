@@ -29,9 +29,9 @@ namespace AStar
             try
             {
                 GridElement closestElement = null;
-                int xMax, xMin, yMax,yMin,/* zMax, zMin,*/ newHeight, newWidth;
-                newHeight = xMax = agent.MyGrid.GridSize.y;
-                newWidth = yMax = agent.MyGrid.GridSize.x;
+                int xMax, xMin, yMax,yMin/*, zMax, zMin*/;
+                xMax = agent.MyGrid.GridSize.y;
+                yMax = agent.MyGrid.GridSize.x;
                 //zMax = agent.MyGrid.GridSize.z;
 
 
@@ -41,168 +41,113 @@ namespace AStar
                 {
                     case GridType.TwoDimensional:
                     {
-                        GridElement closest = null;
-                        float dist = float.MaxValue;
-                        foreach (GridElement ele in agent.MyGrid.Elements)
+                            //GridElement closest = null;
+                            //float dist = float.MaxValue;
+                            //foreach (GridElement ele in agent.MyGrid.Elements)
+                            //{
+                            //    float currentDist = Vector3.Distance(position, ele.transform.position);
+                            //    if (currentDist < dist)
+                            //    {
+                            //        dist = currentDist;
+                            //        closest = ele;
+                            //    }
+                            //}
+                            //return closest;
+
+                        List<GridElement> leftPoints = new List<GridElement>();
+                        List<GridElement> middlePoints = new List<GridElement>();
+                        List<GridElement> rightPoints = new List<GridElement>();
+
+                        leftPoints.Add(agent.MyGrid.Elements[xMin, yMin, 0]);
+                        leftPoints.Add(agent.MyGrid.Elements[xMin, yMax / 2, 0]);
+                        leftPoints.Add(agent.MyGrid.Elements[xMin, yMax - 1, 0]);
+
+                        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMin, 0]);
+                        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMax / 2, 0]);
+                        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMax - 1, 0]);
+
+                        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, 0, 0]);
+                        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, yMax / 2, 0]);
+                        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, yMax - 1, 0]);
+
+                        bool flag = true;
+
+                        int iterations = 0;
+                        while (flag)
                         {
-                            float currentDist = Vector3.Distance(position, ele.transform.position);
-                            if (currentDist < dist)
+                            ++iterations;
+                            if (Mathf.Abs(leftPoints[0].ElementIndex.x - rightPoints[0].ElementIndex.x) > 1 || Mathf.Abs(leftPoints[0].ElementIndex.y - rightPoints[2].ElementIndex.y) > 1)
+                                flag = true;
+                            else
+                                flag = false;
+
+                            bool contains = false;
+
+                            if (FragmentsContaisPosition(agent.GridDirection, leftPoints[0], middlePoints[1], position))
                             {
-                                dist = currentDist;
-                                closest = ele;
+                                xMax = middlePoints[1].ElementIndex.x;
+                                yMax = middlePoints[1].ElementIndex.y;
+                                contains = true;
                             }
+                            else if (FragmentsContaisPosition(agent.GridDirection, middlePoints[0], rightPoints[1], position))
+                            {
+                                xMin = middlePoints[1].ElementIndex.x;
+                                yMax = middlePoints[1].ElementIndex.y;
+                                contains = true;
+                            }
+                            else if (FragmentsContaisPosition(agent.GridDirection, leftPoints[1], middlePoints[2], position))
+                            {
+                                xMax = middlePoints[1].ElementIndex.x;
+                                yMin = middlePoints[1].ElementIndex.y;
+                                contains = true;
+                            }
+                            else if (FragmentsContaisPosition(agent.GridDirection, middlePoints[1], rightPoints[2], position))
+                            {
+                                xMin = middlePoints[1].ElementIndex.x;
+                                yMin = middlePoints[1].ElementIndex.y;
+                                contains = true;
+                            }
+                            if (!contains || iterations > agent.MyGrid.Elements.Length)
+                                break;
+
+                            leftPoints.Clear();
+                            middlePoints.Clear();
+                            rightPoints.Clear();
+
+                            leftPoints.Add(agent.MyGrid.Elements[xMin, yMin, 0]);
+                            leftPoints.Add(agent.MyGrid.Elements[xMin, yMax - Mathf.CeilToInt((yMax - yMin) / 2f), 0]);
+                            leftPoints.Add(agent.MyGrid.Elements[xMin, yMax - 1, 0]);
+
+                            middlePoints.Add(agent.MyGrid.Elements[xMax - Mathf.CeilToInt((xMax - xMin) / 2f), yMin, 0]);
+                            middlePoints.Add(agent.MyGrid.Elements[xMax - Mathf.CeilToInt((xMax - xMin) / 2f), yMax - Mathf.CeilToInt((yMax - yMin) / 2f), 0]);
+                            middlePoints.Add(agent.MyGrid.Elements[xMax - Mathf.CeilToInt((xMax - xMin) / 2f), yMax - 1, 0]);
+
+                            rightPoints.Add(agent.MyGrid.Elements[xMax - 1, 0, 0]);
+                            rightPoints.Add(agent.MyGrid.Elements[xMax - 1, yMax - Mathf.CeilToInt((yMax - yMin) / 2f), 0]);
+                            rightPoints.Add(agent.MyGrid.Elements[xMax - 1, yMax - 1, 0]);
                         }
-                        return closest;
 
-                            //List<GridElement> leftPoints = new List<GridElement>();
-                            //List<GridElement> middlePoints = new List<GridElement>();
-                            //List<GridElement> rightPoints = new List<GridElement>();
-
-                            //leftPoints.Add(agent.MyGrid.Elements[xMin, yMin, 0]);
-                            //leftPoints.Add(agent.MyGrid.Elements[xMin, yMax / 2, 0]);
-                            //leftPoints.Add(agent.MyGrid.Elements[xMin, yMax - 1, 0]);
-
-                            //middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMin, 0]);
-                            //middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMax / 2, 0]);
-                            //middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMax - 1, 0]);
-
-                            //rightPoints.Add(agent.MyGrid.Elements[xMax - 1, 0, 0]);
-                            //rightPoints.Add(agent.MyGrid.Elements[xMax - 1, yMax / 2, 0]);
-                            //rightPoints.Add(agent.MyGrid.Elements[xMax - 1, yMax - 1, 0]);
-
-                            //bool flag = true;
-
-                            //while (flag)
-                            //{
-                            //    if (Mathf.Abs(leftPoints[0].ElementIndex.x - rightPoints[0].ElementIndex.x) > 1 && Mathf.Abs(leftPoints[0].ElementIndex.y - rightPoints[2].ElementIndex.y) > 0)
-                            //        flag = true;
-                            //    else
-                            //        flag = false;
-                            //    bool contains = true;
-                            //    contains = FragmentsContaisPosition(agent.GridDirection, leftPoints[0], middlePoints[1], position);
-                            //    if (contains)
-                            //    {
-                            //        leftPoints.Clear();
-                            //        middlePoints.Clear();
-                            //        rightPoints.Clear();
-
-                            //        newHeight = Mathf.CeilToInt(newHeight / 2f);
-                            //        newWidth = Mathf.CeilToInt(newWidth / 2f);
-                            //        xMax = newWidth;
-                            //        yMax = newHeight;
-
-                            //        leftPoints.Add(agent.MyGrid.Elements[xMin, yMin, 0]);
-                            //        leftPoints.Add(agent.MyGrid.Elements[xMin, yMax / 2, 0]);
-                            //        leftPoints.Add(agent.MyGrid.Elements[xMin, yMax - 1, 0]);
-
-                            //        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMin, 0]);
-                            //        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMax / 2, 0]);
-                            //        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMax - 1, 0]);
-
-                            //        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, 0, 0]);
-                            //        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, yMax / 2, 0]);
-                            //        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, yMax - 1, 0]);
-                            //        continue;
-                            //    }
-                            //    contains = FragmentsContaisPosition(agent.GridDirection, middlePoints[0], rightPoints[1], position);
-                            //    if (contains)
-                            //    {
-                            //        leftPoints.Clear();
-                            //        middlePoints.Clear();
-                            //        rightPoints.Clear();
-
-                            //        newHeight = Mathf.CeilToInt(newHeight / 2f);
-                            //        newWidth = Mathf.CeilToInt(newWidth / 2f);
-                            //        xMin = xMax - newWidth;
-                            //        yMax = newHeight;
-
-                            //        leftPoints.Add(agent.MyGrid.Elements[xMin, yMin, 0]);
-                            //        leftPoints.Add(agent.MyGrid.Elements[xMin, yMax / 2, 0]);
-                            //        leftPoints.Add(agent.MyGrid.Elements[xMin, yMax - 1, 0]);
-
-                            //        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMin, 0]);
-                            //        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMax / 2, 0]);
-                            //        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMax - 1, 0]);
-
-                            //        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, 0, 0]);
-                            //        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, yMax / 2, 0]);
-                            //        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, yMax - 1, 0]);
-                            //        continue;
-                            //    }
-                            //    contains = FragmentsContaisPosition(agent.GridDirection, leftPoints[1], middlePoints[2], position);
-                            //    if (contains)
-                            //    {
-                            //        leftPoints.Clear();
-                            //        middlePoints.Clear();
-                            //        rightPoints.Clear();
-
-                            //        newHeight = Mathf.CeilToInt(newHeight / 2f);
-                            //        newWidth = Mathf.CeilToInt(newWidth / 2f);
-                            //        xMax = newWidth;
-                            //        yMin = yMax - newHeight;
-
-                            //        leftPoints.Add(agent.MyGrid.Elements[xMin, yMin, 0]);
-                            //        leftPoints.Add(agent.MyGrid.Elements[xMin, yMax / 2, 0]);
-                            //        leftPoints.Add(agent.MyGrid.Elements[xMin, yMax - 1, 0]);
-
-                            //        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMin, 0]);
-                            //        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMax / 2, 0]);
-                            //        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMax - 1, 0]);
-
-                            //        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, 0, 0]);
-                            //        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, yMax / 2, 0]);
-                            //        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, yMax - 1, 0]);
-                            //        continue;
-                            //    }
-                            //    contains = FragmentsContaisPosition(agent.GridDirection, middlePoints[1], rightPoints[2], position);
-                            //    if (contains)
-                            //    {
-                            //        leftPoints.Clear();
-                            //        middlePoints.Clear();
-                            //        rightPoints.Clear();
-
-                            //        newHeight = Mathf.CeilToInt(newHeight / 2f);
-                            //        newWidth = Mathf.CeilToInt(newWidth / 2f);
-                            //        xMin = xMax - newWidth;
-                            //        yMin = yMax - newHeight;
-
-                            //        leftPoints.Add(agent.MyGrid.Elements[xMin, yMin, 0]);
-                            //        leftPoints.Add(agent.MyGrid.Elements[xMin, yMax / 2, 0]);
-                            //        leftPoints.Add(agent.MyGrid.Elements[xMin, yMax - 1, 0]);
-
-                            //        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMin, 0]);
-                            //        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMax / 2, 0]);
-                            //        middlePoints.Add(agent.MyGrid.Elements[xMax / 2, yMax - 1, 0]);
-
-                            //        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, 0, 0]);
-                            //        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, yMax / 2, 0]);
-                            //        rightPoints.Add(agent.MyGrid.Elements[xMax - 1, yMax - 1, 0]);
-                            //        continue;
-                            //    }
-                            //    if (!contains) break;
-                            //}
-
-                            //float minDist = Vector3.Distance(leftPoints[0].transform.position, position);
-                            //closestElement = leftPoints[0];
-                            //float curDist = Vector3.Distance(rightPoints[0].transform.position, position);
-                            //if (minDist > curDist)
-                            //{
-                            //    minDist = curDist;
-                            //    closestElement = rightPoints[0];
-                            //}
-                            //curDist = Vector3.Distance(leftPoints[2].transform.position, position);
-                            //if (minDist > curDist)
-                            //{
-                            //    minDist = curDist;
-                            //    closestElement = leftPoints[2];
-                            //}
-                            //curDist = Vector3.Distance(rightPoints[2].transform.position, position);
-                            //if (minDist > curDist)
-                            //{
-                            //    closestElement = rightPoints[2];
-                            //}
-                            //return closestElement;
+                        float minDist = Vector3.Distance(leftPoints[0].transform.position, position);
+                        closestElement = leftPoints[0];
+                        float curDist = Vector3.Distance(rightPoints[0].transform.position, position);
+                        if (minDist > curDist)
+                        {
+                            minDist = curDist;
+                            closestElement = rightPoints[0];
                         }
+                        curDist = Vector3.Distance(leftPoints[2].transform.position, position);
+                        if (minDist > curDist)
+                        {
+                            minDist = curDist;
+                            closestElement = leftPoints[2];
+                        }
+                        curDist = Vector3.Distance(rightPoints[2].transform.position, position);
+                        if (minDist > curDist)
+                        {
+                            closestElement = rightPoints[2];
+                        }
+                        return closestElement;
+                    }
                     case GridType.ThreeDimensional:
                     {
                         Debug.LogError("A* 3D not implemented");
@@ -359,18 +304,13 @@ namespace AStar
                     if (!_openElements.Contains(element))
                     {
                         element.PathParentField = _currentElement;
-                        element.CalculateHeuristic(_targetElement);
                         _openElements.Add(element);
                     }
                     else
                     {
-                        if (GridElement.CheckMoveDistance(element) >
-                            GridElement.CheckMoveDistance(element, _currentElement))
-                        {
-                            element.PathParentField = _currentElement;
-                            element.CalculateHeuristic(_targetElement);
-                        }
+                        element.CheckNewParent(_currentElement);
                     }
+                    element.CalculateHeuristic(_targetElement);
                 }
             }
         }

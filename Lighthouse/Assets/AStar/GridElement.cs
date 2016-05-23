@@ -103,6 +103,17 @@ namespace AStar
             _heuristicCost = Mathf.CeilToInt(Vector3.Distance(gameObject.transform.position, element.transform.position));
         }
 
+        public virtual void CheckNewParent(GridElement newParent)
+        {
+            GridElement oldParentElement = PathParentField;
+            int cost = TotalFieldMoveCost;
+            PathParentField = newParent;
+            if (cost < TotalFieldMoveCost)
+            {
+                PathParentField = oldParentElement;
+            }
+        }
+
         public override bool Equals(object obj)
         {
             if (obj == null) return false;
