@@ -5,7 +5,6 @@ using System.Collections;
 public class LightSteering : MonoBehaviour
 {
     private bool _targeted;
-    //private Vector3 Rotate
 	// Use this for initialization
 	void Start () {
 	

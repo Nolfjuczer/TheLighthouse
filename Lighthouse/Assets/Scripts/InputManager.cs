@@ -5,14 +5,10 @@ public class InputManager : Singleton<InputManager>
 {
     public bool ThisFrameTouch, PreviousFrameTouch;
     public Vector2 TouchPosition, PreviousTouchPosition;
-
-	// Use this for initialization
-	void Start () {
-	
-	}
 	
 	// Update is called once per frame
-	void Update () {
+	void Update ()
+    {
 #if UNITY_ANDROID && !UNITY_EDITOR
 	    PreviousFrameTouch = ThisFrameTouch;
 	    PreviousTouchPosition = TouchPosition;
@@ -38,5 +34,10 @@ public class InputManager : Singleton<InputManager>
             ThisFrameTouch = false;
         }
 #endif
+    }
+
+    public bool ReturnButton()
+    {
+        return Input.GetKeyDown(KeyCode.Escape);
     }
 }

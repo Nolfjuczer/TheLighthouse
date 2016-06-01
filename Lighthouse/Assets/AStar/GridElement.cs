@@ -14,14 +14,14 @@ namespace AStar
         }
 
         [SerializeField]
-        protected int _fieldMoveCost;
-        public virtual int FieldMoveCost
+        protected float _fieldMoveCost;
+        public virtual float FieldMoveCost
         {
             get { return _fieldMoveCost; }
             set { _fieldMoveCost = value; }
         }
 
-        protected int _heuristicCost;
+        protected float _heuristicCost;
 
         protected IntVector3 _elementIndex;
         public virtual IntVector3 ElementIndex
@@ -38,11 +38,11 @@ namespace AStar
             {
                 _pathParentField = value;
                 int dist = CheckMoveDistance(this);
-                if (dist <= 0)
+                if (dist <= 1)
                 {
                     _fieldMoveCost = _elementMoveCostDirection.x;
                 }
-                else if (dist == 1)
+                else if (dist == 2)
                 {
                     _fieldMoveCost = _elementMoveCostDirection.y;
                 }
@@ -53,12 +53,12 @@ namespace AStar
             }
         }
 
-        public virtual int TotalFieldMoveCost
+        public virtual float TotalFieldMoveCost
         {
             get
             {
                 GridElement element = this;
-                int totalCost = _heuristicCost;
+                float totalCost = _heuristicCost;
                 while (element != null)
                 {
                     if (element == null || element == element.PathParentField) break;
@@ -69,8 +69,8 @@ namespace AStar
             }
         }
 
-        protected IntVector3 _elementMoveCostDirection;
-        public virtual IntVector3 ElementMoveCostDirection
+        protected Vector3 _elementMoveCostDirection;
+        public virtual Vector3 ElementMoveCostDirection
         {
             get { return _elementMoveCostDirection; }
             set { _elementMoveCostDirection = value; }
@@ -106,7 +106,7 @@ namespace AStar
         public virtual void CheckNewParent(GridElement newParent)
         {
             GridElement oldParentElement = PathParentField;
-            int cost = TotalFieldMoveCost;
+            float cost = TotalFieldMoveCost;
             PathParentField = newParent;
             if (cost < TotalFieldMoveCost)
             {

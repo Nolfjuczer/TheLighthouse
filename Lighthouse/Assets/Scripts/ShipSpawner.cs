@@ -46,4 +46,9 @@ public class ShipSpawner : MonoBehaviour
             }
         }
     }
+
+    public void OnDisable()
+    {
+        StopAllCoroutines();
+    }
 }

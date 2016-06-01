@@ -2,12 +2,63 @@
 using UnityEngine.UI;
 using System.Collections.Generic;
 
+public enum EGameState
+{
+    InGame,
+    Paused
+}
+
 public class GameController : Singleton<GameController>
 {
+    public EGameState GameState
+    {
+        get { return _gameState; }
+        set
+        {
+            switch (value)
+            {
+                case EGameState.InGame:
+                    Time.timeScale = 1f;
+                    break;
+                case EGameState.Paused:
+                    Time.timeScale = 0.000001f;
+                    break;
+            }
+            _gameState = value;
+        }
+    }
+    private EGameState _gameState = EGameState.InGame;
+
     public AStar.Grid MainGrid;
     public Transform IslandTransfrom;
+    public LightSteering Light;
     public Camera MainCamera;
 
+    public void Update()
+    {
+        OnBackButton();
+    }
+
+    #region TotalGameControl
+
+    public void OnBackButton()
+    {
+        if (InputManager.Instance.ReturnButton())
+        {
+            if (GameState != EGameState.InGame)
+            {
+                Application.Quit();
+            }
+            else
+            {
+                GameState = EGameState.Paused;
+            }
+        }
+    }
+
+    #endregion
+
+    #region InGame
     #region Capture
 
     public RectTransform MainCanvasRectTransform;
@@ -97,5 +148,6 @@ public class GameController : Singleton<GameController>
         ship.gameObject.SetActive(false);
     }
     #endregion
+#endregion
 }
 

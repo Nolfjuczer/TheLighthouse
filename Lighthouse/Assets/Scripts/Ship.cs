@@ -1,8 +1,10 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections;
+using System.Runtime.Remoting.Messaging;
 using AStar;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class Ship : WandererBehavior
 {
@@ -27,6 +29,7 @@ public class Ship : WandererBehavior
     private TrailRenderer _trailRenderer;
     private AStarAgent _myAgent;
     private WaterGridElement _currentElement;
+    private bool _isSuper;
 
     public override void Awake()
     {
@@ -71,15 +74,29 @@ public class Ship : WandererBehavior
         _captureTimer = 0f;
         _captured = false;
 
-        _renderer.color = Color.white;
         _trailRenderer.enabled = true;
+
+        _circleImage = GameController.Instance.GetProgressCricle(transform.position);
+        _circleImage.enabled = false;
+
+        _isSuper = Random.Range(0f, 1f) > 0.7f;
+        //test
+        _isSuper = true;
+        if (_isSuper)
+            _renderer.color = Color.magenta;
+        else
+            _renderer.color = Color.white;
+
         StartCoroutine(WandererCoroutine());
     }
 
     public IEnumerator WandererCoroutine()
     {
+        //targetIsland
         _wanderDestination = GameController.Instance.IslandTransfrom.position - gameObject.transform.position;
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSeconds(1f * ShipSpeed);
+
+        //Do what youre meant to xD
         while (true)
         {
             _wanderDestination = Wander();
@@ -99,26 +116,27 @@ public class Ship : WandererBehavior
 
     public void DestoryOnIsland()
     {
-        if(_circleImage != null) GameController.Instance.ReturnProgressCircle(_circleImage);
-        GameController.Instance.ReturnShip(this);
+        CleanShip();
     }
 
     private IEnumerator ArriveToLand()
     {
+        _circleImage.enabled = false;
         foreach (GridElement element in _myAgent.Path)
         {
             WaterGridElement waterElement = element as WaterGridElement;
             if (waterElement != null) waterElement.MyRenderer.enabled = false;
         }
         _trailRenderer.enabled = false;
-        float landTimer = 3f;
+        float landTimer = 2f;
         while (landTimer > 0f)
         {
             landTimer -= Time.deltaTime;
             landTimer = Mathf.Clamp(landTimer,0f,3f);
-            gameObject.transform.localScale = Vector3.one * (landTimer / 3f);
+            gameObject.transform.localScale = Vector3.one * (landTimer / 2f);
             yield return null;
         }
+        //TODO give points
         CleanShip();
     }
 
@@ -126,7 +144,6 @@ public class Ship : WandererBehavior
     {
         transform.localScale = Vector3.one;
         if(_circleImage != null) GameController.Instance.ReturnProgressCircle(_circleImage);
-        //TODO give points
         GameController.Instance.ReturnShip(this);
         gameObject.SetActive(false);
     }
@@ -156,11 +173,7 @@ public class Ship : WandererBehavior
 
     private IEnumerator CaptureByLightHouse()
     {
-        if(_circleImage == null)
-            _circleImage = GameController.Instance.GetProgressCricle(gameObject.transform.position);
         _circleImage.enabled = true;
-        _circleImage.gameObject.SetActive(true);
-        _circleImage.rectTransform.localScale = new Vector3(0.8f,0.8f,1f);
         while (_captureTimer < CaptureTime)
         {
             _captureTimer += Time.deltaTime;
@@ -168,6 +181,7 @@ public class Ship : WandererBehavior
             GameController.Instance.SetCirclePosition(_circleImage, gameObject.transform.position); //new idea
             yield return null;
         }
+
         _myAgent.CalculatePath();
         _myAgent.Path.RemoveAt(0);
         foreach (GridElement element in _myAgent.Path)
@@ -176,7 +190,8 @@ public class Ship : WandererBehavior
             if(waterElement != null) waterElement.MyRenderer.enabled = true;
         }
         NextGridElement();
-        _renderer.color = Color.green;
+
+        if (_isSuper) PowerUpController.Instance.GetPowerUp(transform.position);
         _captured = true;
     }
 
@@ -195,6 +210,10 @@ public class Ship : WandererBehavior
         {
             StartCoroutine("CaptureByLightHouse");
         }
+        if(col2D.gameObject.layer == LayerMask.NameToLayer("Obstacle"))
+        {
+            DestoryOnIsland();
+        }
     }
 
     public void OnTriggerExit2D(Collider2D col2D)
@@ -203,8 +222,8 @@ public class Ship : WandererBehavior
         if (col2D.gameObject.layer == LayerMask.NameToLayer("Light"))
         {
             StopCoroutine("CaptureByLightHouse");
+            _circleImage.enabled = false;
             _captureTimer = 0f;
-            GameController.Instance.ReturnProgressCircle(_circleImage);
         }
     }
 }
