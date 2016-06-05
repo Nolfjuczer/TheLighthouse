@@ -7,7 +7,7 @@ public class GameBounds : MonoBehaviour {
     {
         if (col.gameObject.layer == LayerMask.NameToLayer("Ship"))
         {
-            GameController.Instance.ReturnShip(col.gameObject.GetComponent<Ship>());
+            col.gameObject.GetComponent<Ship>().CleanShip();
         }
     }
 }

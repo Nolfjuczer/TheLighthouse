@@ -1,8 +1,10 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
+using Random = UnityEngine.Random;
 
 public enum PowerUpType
 {
@@ -18,6 +20,20 @@ public class PowerUpController : Singleton<PowerUpController>
     public Sprite[] PowerUpSprites;
 
     public List<PowerUp> PossibleUps = new List<PowerUp>();
+
+    public Action LightEnlargerBegin;
+    public Action LightEnlargerEnd;
+    public Action CaptureBoosterBegin;
+    public Action CaptureBoosterEnd;
+    public Action DirectionSwapperBegin;
+    public Action DirectionSwapperEnd;
+    public Action CaptureSlowerBegin;
+    public Action CaptureSlowerEnd;
+
+    private float _lightEnlargerTimer;
+    private float _captureBoosterTimer;
+    private float _directionSwapperTimer;
+    private float _captureSlowerTimer;
 
     public GameObject GetPowerUp(Vector3 position)
     {
@@ -52,17 +68,69 @@ public class PowerUpController : Singleton<PowerUpController>
         switch(type)
         {
             case PowerUpType.NCaptureSlower:
+                _captureSlowerTimer = 0f;
+                StartCoroutine(CaptureSlowerEnumerator());
                 Debug.Log("CaptureSlower");
                 break;
             case PowerUpType.NDirectionSwapper:
+                _directionSwapperTimer = 0f;
+                StartCoroutine(DirectionSwapperEnumerator());
                 Debug.Log("DirectionSwapper");
                 break;
             case PowerUpType.PCaptureBooster:
+                _captureBoosterTimer = 0f;
+                StartCoroutine(CaptureBoosterEnumerator());
                 Debug.Log("CaptureBooster");
                 break;
             case PowerUpType.PLightEnlarger:
+                _lightEnlargerTimer = 0f;
+                StartCoroutine(LightEnlargerEnumerator());
                 Debug.Log("LightEnlarger");
                 break;
         }
+    }
+
+    protected IEnumerator CaptureSlowerEnumerator()
+    {
+        CaptureSlowerBegin();
+        while (_captureSlowerTimer < 5f)
+        {
+            _captureSlowerTimer += Time.deltaTime;
+            yield return null;
+        }
+        CaptureSlowerEnd();
+    }
+
+    protected IEnumerator CaptureBoosterEnumerator()
+    {
+        CaptureBoosterBegin();
+        while (_captureBoosterTimer < 5f)
+        {
+            _captureBoosterTimer += Time.deltaTime;
+            yield return null;
+        }
+        CaptureBoosterEnd();
+    }
+
+    protected IEnumerator DirectionSwapperEnumerator()
+    {
+        DirectionSwapperBegin();
+        while (_directionSwapperTimer < 5f)
+        {
+            _directionSwapperTimer += Time.deltaTime;
+            yield return null;
+        }
+        DirectionSwapperEnd();
+    }
+
+    protected IEnumerator LightEnlargerEnumerator()
+    {
+        LightEnlargerBegin();
+        while (_lightEnlargerTimer < 5f)
+        {
+            _lightEnlargerTimer += Time.deltaTime;
+            yield return null;
+        }
+        LightEnlargerEnd();
     }
 }
