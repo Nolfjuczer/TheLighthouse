@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine.SceneManagement;
 
-public class PauseController : MonoBehaviour
+public class PauseController : Singleton<PauseController>
 {
     public GameObject Pause;
 

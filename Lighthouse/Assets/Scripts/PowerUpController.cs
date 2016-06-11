@@ -70,22 +70,18 @@ public class PowerUpController : Singleton<PowerUpController>
             case PowerUpType.NCaptureSlower:
                 _captureSlowerTimer = 0f;
                 StartCoroutine(CaptureSlowerEnumerator());
-                Debug.Log("CaptureSlower");
                 break;
             case PowerUpType.NDirectionSwapper:
                 _directionSwapperTimer = 0f;
                 StartCoroutine(DirectionSwapperEnumerator());
-                Debug.Log("DirectionSwapper");
                 break;
             case PowerUpType.PCaptureBooster:
                 _captureBoosterTimer = 0f;
                 StartCoroutine(CaptureBoosterEnumerator());
-                Debug.Log("CaptureBooster");
                 break;
             case PowerUpType.PLightEnlarger:
                 _lightEnlargerTimer = 0f;
                 StartCoroutine(LightEnlargerEnumerator());
-                Debug.Log("LightEnlarger");
                 break;
         }
     }

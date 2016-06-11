@@ -9,13 +9,13 @@ public class Port : MonoBehaviour
         if (col2D.gameObject.layer == LayerMask.NameToLayer("Ship"))
         {
             Ship ship = col2D.GetComponent<Ship>();
-            if (ship != null && ship.Captured) 
+            if (ship.Captured) 
             {
                 ship.GetToPort();
             }
             else
             {
-                ship.DestoryOnIsland();
+                ship.ObstacleAvoidance();
             }
         }
     }

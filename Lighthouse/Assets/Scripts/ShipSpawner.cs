@@ -37,11 +37,11 @@ public class ShipSpawner : MonoBehaviour
             ship.transform.rotation = spawnQuaternion;
             ship.gameObject.SetActive(true);
             ++_spawnedThisCycle;
-            yield return new  WaitForSeconds(3f);
+            yield return new  WaitForSeconds(5f);
 
             if (_spawnedThisCycle >= 3)
             {
-                yield return new WaitForSeconds(10f);
+                yield return new WaitForSeconds(15f);
                 _spawnedThisCycle = 0;
             }
         }

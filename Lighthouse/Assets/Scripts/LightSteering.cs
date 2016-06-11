@@ -4,7 +4,12 @@ using System.Collections;
 
 public class LightSteering : MonoBehaviour
 {
+
     private bool _targeted;
+    public bool Targeted
+    {
+        get { return _targeted; }
+    }
     private Vector3 _normalScale = new Vector3(0.4f,0.58f,1f);
     private Vector3 _largeScale = new Vector3(0.7f,0.58f,1f);
     private Vector3 _smallScale = new Vector3(0.1f, 0.58f, 1f);

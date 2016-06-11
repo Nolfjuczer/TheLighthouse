@@ -15,7 +15,6 @@ public class WandererBehavior : MonoBehaviour
 
     public virtual void Awake()
     {
-        _wanderTarget = GameController.Instance.IslandTransfrom.position;
         _wanderRadius = WanderRadius;
         _wanderDistance = WanderDistance;
         _wanderJitter = WanderJitter;
@@ -23,8 +22,7 @@ public class WandererBehavior : MonoBehaviour
 
     public virtual void OnEnable()
     {
-        _wanderTarget = gameObject.transform.position;
-
+        //_wanderTarget = gameObject.transform.position;
         WanderRadius = _wanderRadius;
         WanderDistance = _wanderDistance;
         WanderJitter = _wanderJitter;
