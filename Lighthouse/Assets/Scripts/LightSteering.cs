@@ -4,12 +4,19 @@ using System.Collections;
 
 public class LightSteering : MonoBehaviour
 {
-
+    public GameObject SecondLight;
     private bool _targeted;
     public bool Targeted
     {
         get { return _targeted; }
     }
+    private bool _activeOn;
+    public bool ActiveOn
+    {
+        get { return _activeOn; }
+        set { _activeOn = value; }
+    }
+
     private Vector3 _normalScale = new Vector3(0.4f,0.58f,1f);
     private Vector3 _largeScale = new Vector3(0.7f,0.58f,1f);
     private Vector3 _smallScale = new Vector3(0.1f, 0.58f, 1f);
@@ -23,6 +30,19 @@ public class LightSteering : MonoBehaviour
         PowerUpController.Instance.DirectionSwapperEnd += InvertSteeringEnd;
         PowerUpController.Instance.LightEnlargerBegin += LightEnlargerBegin;
         PowerUpController.Instance.LightEnlargerEnd += LightEnlargerEnd;
+	    ActiveController.Instance.OnSecondLight += OnSecondLight;
+	}
+
+    public void OnSecondLight()
+    {
+        SecondLight.SetActive(true);
+        StartCoroutine(SecondLightCoroutine());
+    }
+
+    protected IEnumerator SecondLightCoroutine()
+    {
+        yield return new WaitForSeconds(5f);
+        SecondLight.SetActive(false);
     }
 
     public void LightEnlargerBegin()
@@ -54,6 +74,7 @@ public class LightSteering : MonoBehaviour
 
     private void InputGetter()
     {
+        if(_activeOn) return;
         if (InputManager.Instance.ThisFrameTouch)
         {
             if (_targeted && InputManager.Instance.PreviousFrameTouch)

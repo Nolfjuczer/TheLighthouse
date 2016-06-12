@@ -29,11 +29,16 @@ public class Mine : MonoBehaviour
         _setUp = true;
     }
 
+    public void DisarmMine()
+    {
+        Destroy(gameObject);
+    }
+
     public void OnTriggerEnter2D(Collider2D col2D)
     {
         if (col2D.gameObject.layer == LayerMask.NameToLayer("Ship"))
         {
-            Destroy(gameObject);
+            DisarmMine();
         }
     }
 }

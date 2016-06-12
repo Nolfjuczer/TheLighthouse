@@ -2,9 +2,11 @@
 using System.Collections;
 using UnityEngine.SceneManagement;
 
-public class PauseController : Singleton<PauseController>
+public class GUIController : Singleton<GUIController>
 {
     public GameObject Pause;
+    public GameObject ActiveButtons;
+    private bool _activeExpanded;
 
     public void OnPauseClick()
     {
@@ -28,5 +30,17 @@ public class PauseController : Singleton<PauseController>
     {
         GameController.Instance.GameState = EGameState.InGame;
         SceneManager.LoadScene(0);
+    }
+
+    public void OnExpandActive()
+    {
+        _activeExpanded = !_activeExpanded;
+        ActiveButtons.SetActive(_activeExpanded);
+    }
+
+    public void OnActiveChosen()
+    {
+        _activeExpanded = false;
+        ActiveButtons.SetActive(false);
     }
 }

@@ -52,7 +52,7 @@ public class GameController : Singleton<GameController>
             else
             {
                 GameState = EGameState.Paused;
-                PauseController.Instance.OnPauseClick();
+                GUIController.Instance.OnPauseClick();
             }
         }
     }

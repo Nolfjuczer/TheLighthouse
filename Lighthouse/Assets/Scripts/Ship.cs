@@ -34,6 +34,7 @@ public class Ship : WandererBehavior
     private WaterGridElement _currentElement;
     private BoxCollider2D _boxCollider;
     private bool _isSuper;
+    private bool _frozen;
 
     private int _speed;
     private Vector3 _baseScale;
@@ -129,6 +130,7 @@ public class Ship : WandererBehavior
         PowerUpController.Instance.CaptureBoosterEnd += CapturePowerUpEnd;
         PowerUpController.Instance.CaptureSlowerBegin += CaptureSlowerBegin;
         PowerUpController.Instance.CaptureSlowerEnd += CapturePowerUpEnd;
+        ActiveController.Instance.OnFreeze += FreezeShip;
 
         StartCoroutine(WandererCoroutine());
     }
@@ -145,6 +147,18 @@ public class Ship : WandererBehavior
             _wanderDestination = Wander();
             yield return new WaitForSeconds(3f);
         }
+    }
+
+    protected void FreezeShip()
+    {
+        _frozen = true;
+        StartCoroutine(FreezeCoroutine());
+    }
+
+    protected IEnumerator FreezeCoroutine()
+    {
+        yield return new WaitForSeconds(4f);
+        _frozen = false;
     }
 	
 	public void Update ()
@@ -226,6 +240,7 @@ public class Ship : WandererBehavior
         PowerUpController.Instance.CaptureBoosterEnd -= CapturePowerUpEnd;
         PowerUpController.Instance.CaptureSlowerBegin -= CaptureSlowerBegin;
         PowerUpController.Instance.CaptureSlowerEnd -= CapturePowerUpEnd;
+        ActiveController.Instance.OnFreeze -= FreezeShip;
     }
 
     protected void CaptureBoostBegin()
@@ -245,7 +260,7 @@ public class Ship : WandererBehavior
 
     private void ShipMovement()
     {
-        if (_died) return;
+        if (_died || _frozen) return;
 #if UNITY_EDITOR
         Debug.DrawRay(transform.position, transform.up.normalized * 2f, Color.red);
 #endif
@@ -298,7 +313,7 @@ public class Ship : WandererBehavior
             if (!Captured)
             {
                 float shift = 0f;
-                if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Island"))
+                if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Island") || hit.collider.gameObject.layer == LayerMask.NameToLayer("Bouy"))
                 {
                     CircleCollider2D col = hit.collider as CircleCollider2D;
                     shift = col.radius;
@@ -393,7 +408,7 @@ public class Ship : WandererBehavior
     {
         if (!_renderer.isVisible) return;
 
-        if (col2D.gameObject.layer == LayerMask.NameToLayer("Light") && _captureTimer < CaptureTime)
+        if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && _captureTimer < CaptureTime)
         {
             StopCoroutine("UncaptureByLightHouse");
             StartCoroutine("CaptureByLightHouse");
@@ -423,7 +438,7 @@ public class Ship : WandererBehavior
     {
         if (!_renderer.isVisible) return;
         if (_captured) return;
-        if (col2D.gameObject.layer == LayerMask.NameToLayer("Light"))
+        if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")))
         {
             StopCoroutine("CaptureByLightHouse");
             StartCoroutine("UncaptureByLightHouse");
