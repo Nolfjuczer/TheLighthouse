@@ -9,10 +9,12 @@ public class InputManager : Singleton<InputManager>
 	// Update is called once per frame
 	void Update ()
     {
+		UnityEngine.EventSystems.EventSystem eventSystem = UnityEngine.EventSystems.EventSystem.current;
+
 #if UNITY_ANDROID && !UNITY_EDITOR
 	    PreviousFrameTouch = ThisFrameTouch;
 	    PreviousTouchPosition = TouchPosition;
-	    if (Input.touchCount > 0)
+	    if (Input.touchCount > 0 && !eventSystem.IsPointerOverGameObject())
 	    {
 	        TouchPosition = Input.touches[0].position;
 	        ThisFrameTouch = true;
@@ -22,9 +24,9 @@ public class InputManager : Singleton<InputManager>
 	        ThisFrameTouch = false;
 	    }
 #else
-        PreviousFrameTouch = ThisFrameTouch;
+		PreviousFrameTouch = ThisFrameTouch;
         PreviousTouchPosition = TouchPosition;
-	    if (Input.GetMouseButton(0))
+	    if (Input.GetMouseButton(0) && !eventSystem.IsPointerOverGameObject())
 	    {
             TouchPosition = Input.mousePosition;
             ThisFrameTouch = true;
