@@ -5,10 +5,18 @@ using UnityEngine.UI;
 
 public class GUIController : Singleton<GUIController>
 {
+    public Text Score;
     public GameObject Pause;
+    public Image CurrentActive;
     public GameObject ActiveButtons;
+    public Image[] ActiveIcons;
     public Image[] PowerUps;
     private bool _activeExpanded;
+
+    public void Update()
+    {
+        Score.text = "$ " + GameController.Instance.Money;
+    }
 
     public void OnPauseClick()
     {
@@ -42,6 +50,7 @@ public class GUIController : Singleton<GUIController>
 
     public void OnActiveChosen()
     {
+        CurrentActive.gameObject.SetActive(true);
         _activeExpanded = false;
         ActiveButtons.SetActive(false);
     }

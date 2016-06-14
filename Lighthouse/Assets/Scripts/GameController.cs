@@ -60,6 +60,9 @@ public class GameController : Singleton<GameController>
     #endregion
 
     #region InGame
+
+    public int Money;
+
     #region Capture
 
     public RectTransform MainCanvasRectTransform;
@@ -136,7 +139,7 @@ public class GameController : Singleton<GameController>
     public Mine GetMine(Vector3 spawnPosition)
     {
         Mine mine= null;
-        if (PossibleFlares.Count > 0)
+        if (PossibleMines.Count > 0)
         {
             mine = PossibleMines[0];
             PossibleMines.Remove(mine);

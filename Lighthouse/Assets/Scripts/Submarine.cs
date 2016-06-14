@@ -139,6 +139,7 @@ public class Submarine : MonoBehaviour
                 if (_emergeTimer <= 0f)
                 {
                     _trailRenderer.transform.localPosition = Vector3.up;
+                    SetCourseOnTarget();
                     break;
                 }
             }
@@ -159,8 +160,7 @@ public class Submarine : MonoBehaviour
             yield return null;
         }
         SpawnMine();
-        yield return EmergeCoroutine(false);
-        SetCourseOnTarget();
+        StartCoroutine(EmergeCoroutine(false));
     }
 
     protected void SpawnMine()

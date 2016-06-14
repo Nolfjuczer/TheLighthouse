@@ -30,7 +30,7 @@ public class Sapper : MonoBehaviour {
             Ray ray = GameController.Instance.MainCamera.ScreenPointToRay(InputManager.Instance.TouchPosition);
             RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
             Mine mine = null;
-            if (hit.collider != null && _currentMine == null && hit.collider.gameObject.layer == LayerMask.NameToLayer("Mine") )
+            if (hit.collider != null && /*_currentMine == null &&*/ hit.collider.gameObject.layer == LayerMask.NameToLayer("Mine") )
             {
                 mine = hit.collider.GetComponent<Mine>();
                 if (mine != null)
@@ -40,7 +40,7 @@ public class Sapper : MonoBehaviour {
                         _circleImage.enabled = true;
                         _currentMine = mine;
                         _selectedPosition = ray.origin;
-                        GameController.Instance.SetCirclePosition(_circleImage, _selectedPosition);
+                        GameController.Instance.SetCirclePosition(_circleImage, mine.transform.position);
                     }                    
                 }
             }

@@ -42,6 +42,7 @@ public class Ship : WandererBehavior
     private bool _died;
     private bool _gotToPort;
     private bool _fastAvoidance;
+    private bool _enlighted;
 
     public override void Awake()
     {
@@ -127,6 +128,7 @@ public class Ship : WandererBehavior
         _died = false;
         _gotToPort = false;
         _fastAvoidance = false;
+        _enlighted = false;
 
         _boxCollider.enabled = true;
 
@@ -202,6 +204,9 @@ public class Ship : WandererBehavior
             yield return null;
         }
         _particleSystem.Stop();
+
+        GameController.Instance.Money -= 10;
+
         CleanShip();
     }
 
@@ -218,7 +223,9 @@ public class Ship : WandererBehavior
             gameObject.transform.localScale = Vector3.Lerp(Vector3.one * 0.05f, _baseScale, landTimer / 2f);
             yield return null;
         }
-        //TODO give points
+
+        GameController.Instance.Money += 10;
+
         CleanShip();
     }
 
@@ -392,9 +399,12 @@ public class Ship : WandererBehavior
     {
         while (_captureTimer > 0f)
         {
-            _captureTimer -= Time.deltaTime / 3f;
-            _circleImage.fillAmount = _captureTimer / _captureTime;
-            GameController.Instance.SetCirclePosition(_circleImage, gameObject.transform.position);
+            if (!_enlighted)
+            {
+                _captureTimer -= Time.deltaTime / 3f;
+                _circleImage.fillAmount = _captureTimer / _captureTime;
+                GameController.Instance.SetCirclePosition(_circleImage, gameObject.transform.position);                
+            }
             yield return null;
         }
         PathVisibility();
@@ -421,6 +431,7 @@ public class Ship : WandererBehavior
 
         if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && _captureTimer < CaptureTime && !_gotToPort)
         {
+            _enlighted = true;
             StopCoroutine("UncaptureByLightHouse");
             StartCoroutine("CaptureByLightHouse");
             return;
@@ -448,9 +459,10 @@ public class Ship : WandererBehavior
     public void OnTriggerExit2D(Collider2D col2D)
     {
         if (!_renderer.isVisible) return;
-        if (_captured) return;
         if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && !_gotToPort)
         {
+            _enlighted = false;
+            if (_captured) return;
             StopCoroutine("CaptureByLightHouse");
             StartCoroutine("UncaptureByLightHouse");
         }

@@ -29,7 +29,17 @@ public class ActiveController : Singleton<ActiveController>
 	private Vector3 _selectedPosition = Vector3.zero;
 	private float _activationLength = 0.0f;
 
-	[System.Serializable]
+    public bool FlareAvailable;
+    public bool BuoyAvailable;
+    public bool FreezeAvailable;
+    public bool SecondAvailable;
+
+    private float _flareCooldown;
+    private float _buoyCooldown;
+    private float _freezeCooldown;
+    private float _secondCooldown;
+
+    [System.Serializable]
 	public struct ActiveInfo
 	{
 		public ActiveInfo(ActiveSkillsEnum activeType, Image activeProgresImage,Vector3 position)
@@ -52,6 +62,11 @@ public class ActiveController : Singleton<ActiveController>
         _circleImage = GameController.Instance.GetProgressCricle(transform.position);
         _circleImage.enabled = false;
         _circleImage.color = Color.green;
+
+        FlareAvailable = true;
+        BuoyAvailable = true;
+        FreezeAvailable = true;
+        SecondAvailable = true;
     } 
 
 	// Update is called once per frame
@@ -127,22 +142,78 @@ public class ActiveController : Singleton<ActiveController>
         _unable = true;
         _activeTimer = 0f;
         _circleImage.enabled = false;
+        GUIController.Instance.CurrentActive.gameObject.SetActive(false);
         GameController.Instance.Light.ActiveOn = false;
         switch (activeType)
         {
             case ActiveSkillsEnum.Buoy:
                 GameController.Instance.GetBuoy(position);
+                StartCoroutine(BuoyCD());
                 break;
             case ActiveSkillsEnum.Flare:
                 GameController.Instance.GetFlare(position);
+                StartCoroutine(FlareCD());
                 break;
             case ActiveSkillsEnum.Freeze:
                 OnFreeze();
+                StartCoroutine(FreezeCD());
                 break;
             case ActiveSkillsEnum.SecondLight:
                 OnSecondLight();
+                StartCoroutine(SecondCD());
                 break;
         }
-		
+    }
+
+    protected IEnumerator FlareCD()
+    {
+        FlareAvailable = false;
+        _flareCooldown = 0f;
+        while (_flareCooldown < 4f)
+        {
+            _flareCooldown += Time.deltaTime;
+            GUIController.Instance.ActiveIcons[0].fillAmount = _flareCooldown/4f;
+            yield return null;
+        }
+        FlareAvailable = true;
+    }
+
+    protected IEnumerator BuoyCD()
+    {
+        BuoyAvailable = false;
+        _buoyCooldown = 0f;
+        while (_buoyCooldown < 4f)
+        {
+            _buoyCooldown += Time.deltaTime;
+            GUIController.Instance.ActiveIcons[1].fillAmount = _buoyCooldown / 4f;
+            yield return null;
+        }
+        BuoyAvailable = true;
+    }
+
+    protected IEnumerator FreezeCD()
+    {
+        FreezeAvailable = false;
+        _freezeCooldown = 0f;
+        while (_freezeCooldown < 4f)
+        {
+            _freezeCooldown += Time.deltaTime;
+            GUIController.Instance.ActiveIcons[2].fillAmount = _freezeCooldown / 4f;
+            yield return null;
+        }
+        FreezeAvailable = true;
+    }
+
+    protected IEnumerator SecondCD()
+    {
+        SecondAvailable = false;
+        _secondCooldown = 0f;
+        while (_secondCooldown < 4f)
+        {
+            _secondCooldown += Time.deltaTime;
+            GUIController.Instance.ActiveIcons[3].fillAmount = _secondCooldown / 4f;
+            yield return null;
+        }
+        SecondAvailable = true;
     }
 }

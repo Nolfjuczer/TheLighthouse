@@ -106,5 +106,9 @@ public class LightSteering : MonoBehaviour
                 }
             }
         }
+        else
+        {
+            _targeted = false;
+        }
     }
 }

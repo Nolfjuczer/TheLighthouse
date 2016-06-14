@@ -4,11 +4,17 @@ using System.Collections;
 public class Mine : MonoBehaviour
 {
     protected bool _setUp;
+    protected Vector3 _baseLocalScale;
 
     public bool SetUp
     {
         get { return _setUp; }
         set { _setUp = value; }
+    }
+
+    void Awake()
+    {
+        _baseLocalScale = transform.localScale;        
     }
 
     void OnEnable()
@@ -19,11 +25,12 @@ public class Mine : MonoBehaviour
 
     protected IEnumerator SetUpMine()
     {
+        yield return new WaitForSeconds(1f);
         float setUpTimer = 0f;
         while (setUpTimer < 1f)
         {
             setUpTimer += Time.deltaTime;
-            gameObject.transform.localScale = Vector3.Lerp(Vector3.zero, Vector3.one*2f, setUpTimer);
+            gameObject.transform.localScale = Vector3.Lerp(Vector3.zero, _baseLocalScale, setUpTimer);
             yield return null;
         }
         _setUp = true;
