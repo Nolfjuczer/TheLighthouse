@@ -1,11 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GUIController : Singleton<GUIController>
 {
     public GameObject Pause;
     public GameObject ActiveButtons;
+    public Image[] PowerUps;
     private bool _activeExpanded;
 
     public void OnPauseClick()

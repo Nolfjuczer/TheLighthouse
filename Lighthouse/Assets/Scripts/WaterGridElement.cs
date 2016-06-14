@@ -1,14 +1,29 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 using AStar;
+using UnityEngine.EventSystems;
 
 public class WaterGridElement : GridElement
 {
     public Sprite MySprite;
     protected SpriteRenderer _myRenderer;
-    public SpriteRenderer MyRenderer
+
+    protected List<Ship> _shipsUsing = new List<Ship>();
+
+    public void UsePoint(bool flag, Ship ship)
     {
-        get { return _myRenderer; }
-        set { _myRenderer = value; }
+        if (flag)
+        {
+            if (_shipsUsing.Contains(ship)) return;
+            _shipsUsing.Add(ship);
+            _myRenderer.enabled = true;
+
+        }
+        else
+        {
+            _shipsUsing.Remove(ship);
+            if (_shipsUsing.Count <= 0) _myRenderer.enabled = false;
+        }
     }
 
     public void OnEnable()

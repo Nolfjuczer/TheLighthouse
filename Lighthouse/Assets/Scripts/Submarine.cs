@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using AStar;
 using UnityEngine.UI;
 
@@ -10,7 +11,6 @@ public class Submarine : MonoBehaviour
     [Range(1, 4)]
     public int ShipSpeed = 1;
 
-    public GameObject Mine;
     public GameObject BotPart;
 
     private float _fearTimer = 0f;
@@ -165,7 +165,7 @@ public class Submarine : MonoBehaviour
 
     protected void SpawnMine()
     {
-        Instantiate(Mine, transform.position, Quaternion.identity);
+        GameController.Instance.GetMine(transform.position);
     }
 
     protected void NextGridElement()
@@ -175,7 +175,6 @@ public class Submarine : MonoBehaviour
             _currentElement = null;
             return;
         }
-        if (_currentElement != null) _currentElement.MyRenderer.enabled = false;
         _currentElement = _myAgent.Path[0] as WaterGridElement;
         _myAgent.Path.RemoveAt(0);
     }

@@ -14,6 +14,7 @@ public class PowerUp : MonoBehaviour
     private float _captureTimer;
     private float _existTimer;
     private bool _immune;
+    private bool _capture;
 
     private Vector3 _scale = new Vector3(0.3f,0.3f,1f);
 
@@ -57,22 +58,34 @@ public class PowerUp : MonoBehaviour
 
     public void OnTriggerEnter2D(Collider2D col2D)
     {
-        if (_immune) return;
         if (col2D.gameObject.layer == LayerMask.NameToLayer("Light"))
         {
             StartCoroutine("CaptureByLightHouse");
+            StopCoroutine("UncaptureByLightHouse");
         }
     }
 
     public void OnTriggerExit2D(Collider2D col2D)
     {
-        if (_immune) return;
         if (col2D.gameObject.layer == LayerMask.NameToLayer("Light"))
         {
+            StartCoroutine("UncaptureByLightHouse");
             StopCoroutine("CaptureByLightHouse");
-            _circleImage.enabled = false;
-            _captureTimer = 0f;
         }
+    }
+
+    private IEnumerator UncaptureByLightHouse()
+    {
+        while (_captureTimer > CaptureTime)
+        {
+            if (!_immune)
+            {
+                _captureTimer -= Time.deltaTime;
+                _circleImage.fillAmount = _captureTimer / CaptureTime;                
+            }
+            yield return null;
+        }
+        _circleImage.enabled = false;
     }
 
     private IEnumerator CaptureByLightHouse()
@@ -80,8 +93,11 @@ public class PowerUp : MonoBehaviour
         _circleImage.enabled = true;
         while (_captureTimer < CaptureTime)
         {
-            _captureTimer += Time.deltaTime;
-            _circleImage.fillAmount = _captureTimer / CaptureTime;
+            if (!_immune)
+            {
+                _captureTimer += Time.deltaTime;
+                _circleImage.fillAmount = _captureTimer / CaptureTime;
+            }
             yield return null;
         }
 

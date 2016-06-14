@@ -89,44 +89,60 @@ public class PowerUpController : Singleton<PowerUpController>
     protected IEnumerator CaptureSlowerEnumerator()
     {
         CaptureSlowerBegin();
+        GUIController.Instance.PowerUps[1].fillAmount = 1;
+        GUIController.Instance.PowerUps[1].gameObject.SetActive(true);
         while (_captureSlowerTimer < 5f)
         {
             _captureSlowerTimer += Time.deltaTime;
+            GUIController.Instance.PowerUps[1].fillAmount = (5f - _captureSlowerTimer) / 5f;
             yield return null;
         }
         CaptureSlowerEnd();
+        GUIController.Instance.PowerUps[1].gameObject.SetActive(false);
     }
 
     protected IEnumerator CaptureBoosterEnumerator()
     {
         CaptureBoosterBegin();
+        GUIController.Instance.PowerUps[2].fillAmount = 1;
+        GUIController.Instance.PowerUps[2].gameObject.SetActive(true);
         while (_captureBoosterTimer < 5f)
         {
             _captureBoosterTimer += Time.deltaTime;
+            GUIController.Instance.PowerUps[2].fillAmount = (5f - _captureBoosterTimer) / 5f;
             yield return null;
         }
         CaptureBoosterEnd();
+        GUIController.Instance.PowerUps[2].gameObject.SetActive(false);
     }
 
     protected IEnumerator DirectionSwapperEnumerator()
     {
         DirectionSwapperBegin();
+        GUIController.Instance.PowerUps[3].fillAmount = 1;
+        GUIController.Instance.PowerUps[3].gameObject.SetActive(true);
         while (_directionSwapperTimer < 5f)
         {
             _directionSwapperTimer += Time.deltaTime;
+            GUIController.Instance.PowerUps[3].fillAmount = (5f - _directionSwapperTimer) / 5f;
             yield return null;
         }
         DirectionSwapperEnd();
+        GUIController.Instance.PowerUps[3].gameObject.SetActive(false);
     }
 
     protected IEnumerator LightEnlargerEnumerator()
     {
         LightEnlargerBegin();
+        GUIController.Instance.PowerUps[0].fillAmount = 1;
+        GUIController.Instance.PowerUps[0].gameObject.SetActive(true);
         while (_lightEnlargerTimer < 5f)
         {
             _lightEnlargerTimer += Time.deltaTime;
+            GUIController.Instance.PowerUps[0].fillAmount = (5f - _lightEnlargerTimer) / 5f;
             yield return null;
         }
         LightEnlargerEnd();
+        GUIController.Instance.PowerUps[0].gameObject.SetActive(false);
     }
 }

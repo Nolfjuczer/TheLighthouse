@@ -40,6 +40,8 @@ public class Ship : WandererBehavior
     private Vector3 _baseScale;
 
     private bool _died;
+    private bool _gotToPort;
+    private bool _fastAvoidance;
 
     public override void Awake()
     {
@@ -123,6 +125,8 @@ public class Ship : WandererBehavior
         _renderer.enabled = true;
 
         _died = false;
+        _gotToPort = false;
+        _fastAvoidance = false;
 
         _boxCollider.enabled = true;
 
@@ -168,6 +172,7 @@ public class Ship : WandererBehavior
 
     public void GetToPort()
     {
+        _gotToPort = true;
         StartCoroutine(ArriveToLand());
     }
 
@@ -203,7 +208,7 @@ public class Ship : WandererBehavior
     private IEnumerator ArriveToLand()
     {
         _circleImage.enabled = false;
-        PathVisibility(true);
+        PathVisibility();
         _trailRenderer.enabled = false;
         float landTimer = 2f;
         while (landTimer > 0f)
@@ -219,11 +224,11 @@ public class Ship : WandererBehavior
 
     private void PathVisibility(bool flag = false)
     {
-        if (_currentElement != null) _currentElement.MyRenderer.enabled = flag;
+        if (_currentElement != null) _currentElement.UsePoint(flag, this);
         foreach (GridElement element in _myAgent.Path)
         {
             WaterGridElement waterElement = element as WaterGridElement;
-            if (waterElement != null) waterElement.MyRenderer.enabled = flag;
+            if (waterElement != null) waterElement.UsePoint(flag, this);
         }
     }
 
@@ -280,7 +285,7 @@ public class Ship : WandererBehavior
         }
         else
         {
-            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, _wanderDestination), Time.deltaTime * 0.15f);
+            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, _wanderDestination), (_fastAvoidance ? 1f : Time.deltaTime * 0.15f));
         }
         transform.position += transform.up.normalized * _speed * Time.deltaTime * _speedMultiplier;   
     }
@@ -305,8 +310,9 @@ public class Ship : WandererBehavior
         }
     }
 
-    public void ObstacleAvoidance()
+    public void ObstacleAvoidance(bool flag = false)
     {
+        _fastAvoidance = flag;
         RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, transform.up.normalized, 2.5f);
         foreach (RaycastHit2D hit in hits)
         {
@@ -329,23 +335,23 @@ public class Ship : WandererBehavior
                 }
                 
                 Vector3 hitPosition = hit.transform.position;
-                float avoidX = hitPosition.x - transform.position.x;
-                float avoidY = hitPosition.y - transform.position.y;
+                float avoidX = hit.transform.position.x - transform.position.x;
+                float avoidY = hit.transform.position.y - transform.position.y;
                 if (avoidX > 0)
                 {
-                    _wanderDestination = new Vector3(hitPosition.x - (shift + 1f), hitPosition.y, hitPosition.z);
+                    _wanderDestination = new Vector3(hitPosition.x - (shift + 1.5f), hitPosition.y, hitPosition.z);
                 }
                 else
                 {
-                    _wanderDestination = new Vector3(hitPosition.x + (shift + 1f), hitPosition.y, hitPosition.z);
+                    _wanderDestination = new Vector3(hitPosition.x + (shift + 1.5f), hitPosition.y, hitPosition.z);
                 }
                 if (avoidY > 0)
                 {
-                    _wanderDestination = new Vector3(hitPosition.x, hitPosition.y - (shift + 1f), hitPosition.z);
+                    _wanderDestination = new Vector3(_wanderDestination.x, hitPosition.y - (shift + 1.5f), hitPosition.z);
                 }
                 else
                 {
-                    _wanderDestination = new Vector3(hitPosition.x, hitPosition.y + (shift + 1f), hitPosition.z);
+                    _wanderDestination = new Vector3(_wanderDestination.x, hitPosition.y + (shift + 1.5f), hitPosition.z);
                 }
                 return;
             }
@@ -368,10 +374,15 @@ public class Ship : WandererBehavior
         PathVisibility(true);
         NextGridElement();
 
-        if (_isSuper) PowerUpController.Instance.GetPowerUp(transform.position);
+        if (_isSuper)
+        {
+            PowerUpController.Instance.GetPowerUp(transform.position);
+            _isSuper = false;
+            _renderer.sprite = Sprites[0];
+        }
         _captured = true;
 
-        yield return new WaitForSeconds(8f);
+        yield return new WaitForSeconds(1f);
 
         StartCoroutine("UncaptureByLightHouse");
 
@@ -381,7 +392,7 @@ public class Ship : WandererBehavior
     {
         while (_captureTimer > 0f)
         {
-            _captureTimer -= Time.deltaTime;
+            _captureTimer -= Time.deltaTime / 3f;
             _circleImage.fillAmount = _captureTimer / _captureTime;
             GameController.Instance.SetCirclePosition(_circleImage, gameObject.transform.position);
             yield return null;
@@ -399,7 +410,7 @@ public class Ship : WandererBehavior
             _currentElement = null;
             return;
         }
-        if (_currentElement != null) _currentElement.MyRenderer.enabled = false;
+        if (_currentElement != null) _currentElement.UsePoint(false, this);
         _currentElement = _myAgent.Path[0] as WaterGridElement;
         _myAgent.Path.RemoveAt(0);
     }
@@ -408,7 +419,7 @@ public class Ship : WandererBehavior
     {
         if (!_renderer.isVisible) return;
 
-        if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && _captureTimer < CaptureTime)
+        if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && _captureTimer < CaptureTime && !_gotToPort)
         {
             StopCoroutine("UncaptureByLightHouse");
             StartCoroutine("CaptureByLightHouse");
@@ -438,7 +449,7 @@ public class Ship : WandererBehavior
     {
         if (!_renderer.isVisible) return;
         if (_captured) return;
-        if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")))
+        if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && !_gotToPort)
         {
             StopCoroutine("CaptureByLightHouse");
             StartCoroutine("UncaptureByLightHouse");

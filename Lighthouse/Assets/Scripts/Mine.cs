@@ -31,7 +31,7 @@ public class Mine : MonoBehaviour
 
     public void DisarmMine()
     {
-        Destroy(gameObject);
+        GameController.Instance.ReturnMine(this);
     }
 
     public void OnTriggerEnter2D(Collider2D col2D)

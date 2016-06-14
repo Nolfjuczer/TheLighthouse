@@ -11,15 +11,12 @@ public enum ActiveSkillsEnum
     Flare,
     Buoy,
     Freeze,
-    SecondLight,
-    Sapper
+    SecondLight
 }
 
 public class ActiveController : Singleton<ActiveController>
 {
     public ActiveSkillsEnum CurrentActive = ActiveSkillsEnum.None;
-    public GameObject BuoyGameObject;
-    public GameObject FlareGameObject;
 
     public Action OnFreeze;
     public Action OnSecondLight;
@@ -27,28 +24,25 @@ public class ActiveController : Singleton<ActiveController>
 
     private float _activeTimer = 0f;
     private Image _circleImage;
-    private Mine mine = null;
     private bool _unable;
 
 	private Vector3 _selectedPosition = Vector3.zero;
-	private float _activationLength = 2.0f;
+	private float _activationLength = 0.0f;
 
 	[System.Serializable]
 	public struct ActiveInfo
 	{
-		public ActiveInfo(ActiveSkillsEnum activeType, Image activeProgresImage,Vector3 position, Mine mine)
+		public ActiveInfo(ActiveSkillsEnum activeType, Image activeProgresImage,Vector3 position)
 		{
 			this.activeType = activeType;
 			this.activeProgresImage = activeProgresImage;
 			this.position = position;
 			this.progres = 0.0f;
-			this.mine = mine;
 		}
 		public ActiveSkillsEnum activeType;
 		public Image activeProgresImage;
 		public Vector3 position;
 		public float progres;
-		public Mine mine;
 	}
 
 	private List<ActiveInfo> _activeInfos = new List<ActiveInfo>();
@@ -71,9 +65,12 @@ public class ActiveController : Singleton<ActiveController>
 		if (_unable && InputManager.Instance.PreviousFrameTouch)
 		{
 			return;
-		} else {
+		}
+        else
+        {
 			_unable = false;
 		}
+
         if (InputManager.Instance.ThisFrameTouch && !GameController.Instance.Light.Targeted && CurrentActive != ActiveSkillsEnum.None)
         {
             Ray ray = GameController.Instance.MainCamera.ScreenPointToRay(InputManager.Instance.TouchPosition);
@@ -83,24 +80,9 @@ public class ActiveController : Singleton<ActiveController>
 			{
 				_selectedPosition = ray.origin;
 			}
-	        //GameController.Instance.SetCirclePosition(_circleImage, _selectedPosition);
 
-            mine = null;
-			if (hit.collider != null)
-			{
-				mine = hit.collider.gameObject.layer == LayerMask.NameToLayer("Mine") ? hit.collider.gameObject.GetComponent<Mine>() : null;
-			}
-            //_circleImage.enabled = true;
-            //_activeTimer += Time.deltaTime;
-            //_circleImage.fillAmount = _activeTimer/2f;
-            //GameController.Instance.Light.ActiveOn = true;
-            //if (_activeTimer > 2f)
-            //{
-            //    UseActive(_selectedPosition, mine,CurrentActive);
-            //    return;
-            //}
 			Image circleImage = GameController.Instance.GetProgressCricle(transform.position);
-			_activeInfos.Add(new ActiveInfo(CurrentActive, circleImage, _selectedPosition, mine));
+			_activeInfos.Add(new ActiveInfo(CurrentActive, circleImage, _selectedPosition));
 			CurrentActive = ActiveSkillsEnum.None;
 
 		} else {
@@ -124,7 +106,7 @@ public class ActiveController : Singleton<ActiveController>
 			
 			if(info.progres > _activationLength)
 			{
-				UseActive(info.position, info.mine, info.activeType);
+				UseActive(info.position, info.activeType);
 				info.activeProgresImage.gameObject.SetActive(false);
 				_activeInfos.RemoveAt(i);
 				--i;
@@ -140,7 +122,7 @@ public class ActiveController : Singleton<ActiveController>
 
 
 
-    private void UseActive(Vector3 position, Mine mine, ActiveSkillsEnum activeType)
+    private void UseActive(Vector3 position, ActiveSkillsEnum activeType)
     {
         _unable = true;
         _activeTimer = 0f;
@@ -149,19 +131,16 @@ public class ActiveController : Singleton<ActiveController>
         switch (activeType)
         {
             case ActiveSkillsEnum.Buoy:
-                Instantiate(BuoyGameObject, position, Quaternion.identity);
+                GameController.Instance.GetBuoy(position);
                 break;
             case ActiveSkillsEnum.Flare:
-                Instantiate(FlareGameObject, position, Quaternion.identity);
+                GameController.Instance.GetFlare(position);
                 break;
             case ActiveSkillsEnum.Freeze:
                 OnFreeze();
                 break;
             case ActiveSkillsEnum.SecondLight:
                 OnSecondLight();
-                break;
-            case ActiveSkillsEnum.Sapper:
-                if(mine != null) mine.DisarmMine();
                 break;
         }
 		

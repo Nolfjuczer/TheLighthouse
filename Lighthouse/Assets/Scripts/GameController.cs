@@ -102,6 +102,90 @@ public class GameController : Singleton<GameController>
     }
     #endregion
 
+    #region Flares
+    public List<FlareActive> PossibleFlares = new List<FlareActive>();
+    public GameObject FlareTemplate;
+    public FlareActive GetFlare(Vector3 spawnPosition)
+    {
+        FlareActive flare = null;
+        if (PossibleFlares.Count > 0)
+        {
+            flare = PossibleFlares[0];
+            PossibleFlares.Remove(flare);
+        }
+        else
+        {
+            GameObject tmpObject = Instantiate(FlareTemplate, spawnPosition, Quaternion.identity) as GameObject;
+            flare = tmpObject.GetComponent<FlareActive>();
+        }
+        flare.transform.position = spawnPosition;
+        flare.gameObject.SetActive(true);
+        return flare;
+    }
+
+    public void ReturnFlare(FlareActive flare)
+    {
+        PossibleFlares.Add(flare);
+        flare.gameObject.SetActive(false);
+    }
+    #endregion
+
+    #region Mines
+    public List<Mine> PossibleMines = new List<Mine>();
+    public GameObject MineTemplate;
+    public Mine GetMine(Vector3 spawnPosition)
+    {
+        Mine mine= null;
+        if (PossibleFlares.Count > 0)
+        {
+            mine = PossibleMines[0];
+            PossibleMines.Remove(mine);
+        }
+        else
+        {
+            GameObject tmpObject = Instantiate(MineTemplate, spawnPosition, Quaternion.identity) as GameObject;
+            mine = tmpObject.GetComponent<Mine>();
+        }
+        mine.transform.position = spawnPosition;
+        mine.gameObject.SetActive(true);
+        return mine;
+    }
+
+    public void ReturnMine(Mine mine)
+    {
+        PossibleMines.Add(mine);
+        mine.gameObject.SetActive(false);
+    }
+    #endregion
+
+    #region Buoys
+    public List<BuoyActive> PossibleBuoys = new List<BuoyActive>();
+    public GameObject BuoyTemplate;
+    public BuoyActive GetBuoy(Vector3 spawnPosition)
+    {
+        BuoyActive buoy = null;
+        if (PossibleBuoys.Count > 0)
+        {
+            buoy = PossibleBuoys[0];
+            PossibleBuoys.Remove(buoy);
+        }
+        else
+        {
+            GameObject tmpObject = Instantiate(BuoyTemplate, spawnPosition, Quaternion.identity) as GameObject;
+            buoy = tmpObject.GetComponent<BuoyActive>();
+        }
+        buoy.transform.position = spawnPosition;
+        buoy.gameObject.SetActive(true);
+        return buoy;
+    }
+
+    public void ReturnBuoy(BuoyActive buoy)
+    {
+        PossibleBuoys.Add(buoy);
+        buoy.gameObject.SetActive(false);
+    }
+    #endregion
+
     #region Ships
     public Transform ShipParentTransform;
     public GameObject Keelboat;
