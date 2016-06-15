@@ -39,6 +39,8 @@ public class ActiveController : Singleton<ActiveController>
     private float _freezeCooldown;
     private float _secondCooldown;
 
+	private const float activeCooldownLength = 4.0f;
+
     [System.Serializable]
 	public struct ActiveInfo
 	{
@@ -169,7 +171,7 @@ public class ActiveController : Singleton<ActiveController>
     {
         FlareAvailable = false;
         _flareCooldown = 0f;
-        while (_flareCooldown < 4f)
+        while (_flareCooldown < activeCooldownLength)
         {
             _flareCooldown += Time.deltaTime;
             GUIController.Instance.ActiveIcons[0].fillAmount = _flareCooldown/4f;
@@ -182,7 +184,7 @@ public class ActiveController : Singleton<ActiveController>
     {
         BuoyAvailable = false;
         _buoyCooldown = 0f;
-        while (_buoyCooldown < 4f)
+        while (_buoyCooldown < activeCooldownLength)
         {
             _buoyCooldown += Time.deltaTime;
             GUIController.Instance.ActiveIcons[1].fillAmount = _buoyCooldown / 4f;
@@ -195,7 +197,7 @@ public class ActiveController : Singleton<ActiveController>
     {
         FreezeAvailable = false;
         _freezeCooldown = 0f;
-        while (_freezeCooldown < 4f)
+        while (_freezeCooldown < activeCooldownLength)
         {
             _freezeCooldown += Time.deltaTime;
             GUIController.Instance.ActiveIcons[2].fillAmount = _freezeCooldown / 4f;
@@ -208,7 +210,7 @@ public class ActiveController : Singleton<ActiveController>
     {
         SecondAvailable = false;
         _secondCooldown = 0f;
-        while (_secondCooldown < 4f)
+        while (_secondCooldown < activeCooldownLength)
         {
             _secondCooldown += Time.deltaTime;
             GUIController.Instance.ActiveIcons[3].fillAmount = _secondCooldown / 4f;
