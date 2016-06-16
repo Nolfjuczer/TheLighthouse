@@ -39,7 +39,11 @@ public class Sapper : MonoBehaviour {
                     {
                         _currentMine = mine;
                         _selectedPosition = ray.origin;
-						_circleImage = GameController.Instance.GetProgressCricle(mine.transform.position);
+						GameObject circleGO = InstanceLord.Instance.GetInstance(InstanceLord.InstanceType.IT_CIRCLE);
+						circleGO.SetActive(true);
+						_circleImage = circleGO.GetComponent<Image>();
+						GameController.Instance.SetCirclePosition(_circleImage, _selectedPosition);
+						//_circleImage = GameController.Instance.GetProgressCricle(mine.transform.position);
                         _circleImage.enabled = true;
                     }                    
                 }

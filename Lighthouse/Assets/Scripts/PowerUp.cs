@@ -18,6 +18,8 @@ public class PowerUp : MonoBehaviour
 
     private Vector3 _scale = new Vector3(0.3f,0.3f,1f);
 
+	//private bool _isBeingCaptured = false;
+
     public void OnEnable()
     {
         gameObject.transform.localScale = Vector3.zero;
@@ -30,11 +32,21 @@ public class PowerUp : MonoBehaviour
 		GameObject circleGO = InstanceLord.Instance.GetInstance(InstanceLord.InstanceType.IT_CIRCLE);
 		circleGO.SetActive(true);
 		_circleImage = circleGO.GetComponent<Image>();
+		GameController.Instance.SetCirclePosition(_circleImage, transform.position);
         //_circleImage = GameController.Instance.GetProgressCricle(transform.position);
         _circleImage.enabled = false;
 
         StartCoroutine(StartImmunity());
     }
+
+	void OnDisable()
+	{
+		if(_circleImage != null)
+		{
+			_circleImage.gameObject.SetActive(false);
+			_circleImage = null;
+		}
+	}
 
     public IEnumerator StartImmunity()
     {

@@ -31,7 +31,7 @@ namespace Utility
 			for(int i = 0;i < _poolSize;++i)
 			{
 				_pool[i] = GameObject.Instantiate(_prefab) as GameObject;
-				_pool[i].transform.parent = _parent;
+				_pool[i].transform.SetParent(_parent);
                 _pool[i].SetActive(false);
 			}
 		}
@@ -59,7 +59,7 @@ namespace Utility
 					_pool[i] = oldPool[i];
 				}
 				_pool[_poolSize] = GameObject.Instantiate(_prefab) as GameObject;
-				_pool[_poolSize].transform.parent = _parent;
+				_pool[_poolSize].transform.SetParent(_parent);
 				_pool[_poolSize].SetActive(false);
 				result = _pool[_poolSize];
 				++_poolSize;

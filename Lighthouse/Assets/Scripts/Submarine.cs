@@ -189,6 +189,8 @@ public class Submarine : MonoBehaviour
         }
         _currentElement = _myAgent.Path[0] as WaterGridElement;
         _myAgent.Path.RemoveAt(0);
+
+		//SpawnMine();
     }
 
     protected IEnumerator FearOfTheLight()
