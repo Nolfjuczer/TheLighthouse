@@ -12,9 +12,9 @@ public class Sapper : MonoBehaviour {
 
     public void OnEnable()
     {
-        _circleImage = GameController.Instance.GetProgressCricle(transform.position);
-        _circleImage.enabled = false;
-        _circleImage.color = Color.white;
+        //_circleImage = GameController.Instance.GetProgressCricle(transform.position);
+        //_circleImage.enabled = false;
+        //_circleImage.color = Color.white;
     }
 
     public void Update()
@@ -37,10 +37,10 @@ public class Sapper : MonoBehaviour {
                 {
                     if (_selectedPosition == Vector3.zero)
                     {
-                        _circleImage.enabled = true;
                         _currentMine = mine;
                         _selectedPosition = ray.origin;
-                        GameController.Instance.SetCirclePosition(_circleImage, mine.transform.position);
+						_circleImage = GameController.Instance.GetProgressCricle(mine.transform.position);
+                        _circleImage.enabled = true;
                     }                    
                 }
             }
@@ -55,6 +55,7 @@ public class Sapper : MonoBehaviour {
                     _currentMine = null;
                     _selectedPosition = Vector3.zero;
                     _circleImage.enabled = false;
+					_circleImage = null;
                 }                
             }
 
@@ -64,7 +65,11 @@ public class Sapper : MonoBehaviour {
         {
             _selectedPosition = Vector3.zero;
             _disarmTimer = 0f;
-            _circleImage.enabled = false;
+			if(_currentMine != null)
+			{
+				_circleImage.enabled = false;
+				_circleImage = null;
+			}
             _currentMine = null;
         }
     }

@@ -27,7 +27,10 @@ public class PowerUp : MonoBehaviour
 
         _immune = true;
 
-        _circleImage = GameController.Instance.GetProgressCricle(transform.position);
+		GameObject circleGO = InstanceLord.Instance.GetInstance(InstanceLord.InstanceType.IT_CIRCLE);
+		circleGO.SetActive(true);
+		_circleImage = circleGO.GetComponent<Image>();
+        //_circleImage = GameController.Instance.GetProgressCricle(transform.position);
         _circleImage.enabled = false;
 
         StartCoroutine(StartImmunity());

@@ -23,7 +23,6 @@ public class ActiveController : Singleton<ActiveController>
     public Action OnSapper;
 
     private float _activeTimer = 0f;
-    private Image _circleImage;
     private bool _unable;
 
 	private Vector3 _selectedPosition = Vector3.zero;
@@ -61,9 +60,9 @@ public class ActiveController : Singleton<ActiveController>
 
     public void OnEnable()
     {
-        _circleImage = GameController.Instance.GetProgressCricle(transform.position);
-        _circleImage.enabled = false;
-        _circleImage.color = Color.green;
+        //_circleImage = GameController.Instance.GetProgressCricle(transform.position);
+        //_circleImage.enabled = false;
+        //_circleImage.color = Color.green;
 
         FlareAvailable = true;
         BuoyAvailable = true;
@@ -88,8 +87,8 @@ public class ActiveController : Singleton<ActiveController>
 			_unable = false;
 		}
 
-        if (InputManager.Instance.ThisFrameTouch && !GameController.Instance.Light.Targeted && CurrentActive != ActiveSkillsEnum.None)
-        {
+        if (GameLord.Instance.CurrentGameState == GameLord.GameState.GS_GAME && InputManager.Instance.ThisFrameTouch&& CurrentActive != ActiveSkillsEnum.None && !GameController.Instance.Light.Targeted)
+		{
             Ray ray = GameController.Instance.MainCamera.ScreenPointToRay(InputManager.Instance.TouchPosition);
             RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
 
@@ -105,8 +104,10 @@ public class ActiveController : Singleton<ActiveController>
 		} else {
 			_selectedPosition = Vector3.zero;
             _activeTimer = 0f;
-            _circleImage.enabled = false;
-            GameController.Instance.Light.ActiveOn = false;
+			if (GameLord.Instance.CurrentGameState == GameLord.GameState.GS_GAME)
+			{
+				GameController.Instance.Light.ActiveOn = false;
+			}
 			if(InputManager.Instance.PreviousFrameTouch)
 			{
 				CurrentActive = ActiveSkillsEnum.None;
@@ -143,7 +144,6 @@ public class ActiveController : Singleton<ActiveController>
     {
         _unable = true;
         _activeTimer = 0f;
-        _circleImage.enabled = false;
         GUIController.Instance.CurrentActive.gameObject.SetActive(false);
         GameController.Instance.Light.ActiveOn = false;
         switch (activeType)

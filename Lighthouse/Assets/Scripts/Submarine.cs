@@ -65,11 +65,23 @@ public class Submarine : MonoBehaviour
 
     public void OnEnable()
     {
-        _circleImage = GameController.Instance.GetProgressCricle(transform.position);
-        _circleImage.enabled = false;
+		GameObject circleGO = InstanceLord.Instance.GetInstance(InstanceLord.InstanceType.IT_CIRCLE);
+		//_circleImage = GameController.Instance.GetProgressCricle(transform.position);
+		_circleImage = circleGO.GetComponent<Image>();
+		_circleImage.gameObject.SetActive(true);
+		_circleImage.enabled = false;
         _circleImage.color = Color.red;
         SetCourseOnTarget();
     }
+
+	void OnDisable()
+	{
+		if(_circleImage != null)
+		{
+			_circleImage.gameObject.SetActive(false);
+			_circleImage = null;
+        }
+	}
 
     protected void SetCourseOnTarget()
     {

@@ -3,6 +3,7 @@ using System.Collections;
 
 namespace Utility
 {
+	[System.Serializable]
 	public class MemberObjectPool
 	{
 		#region Variables
@@ -60,6 +61,7 @@ namespace Utility
 				_pool[_poolSize] = GameObject.Instantiate(_prefab) as GameObject;
 				_pool[_poolSize].transform.parent = _parent;
 				_pool[_poolSize].SetActive(false);
+				result = _pool[_poolSize];
 				++_poolSize;
 			}
 

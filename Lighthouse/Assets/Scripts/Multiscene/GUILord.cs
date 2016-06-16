@@ -68,6 +68,12 @@ public class GUILord : Singleton<GUILord>
 		ValidateGUILord();
     }
 
+	protected override void Awake()
+	{
+		base.Awake();
+		InitializeGUILord();
+    }
+
 	void Update()
 	{
 		ProcesTransition();
@@ -94,6 +100,11 @@ public class GUILord : Singleton<GUILord>
 			}
 			_guiStateInfos[i].state = (GUIState)i;
 		}
+	}
+
+	private void InitializeGUILord()
+	{
+		
 	}
 
 	public void ChangeGUIState(GUIState newGUIState, bool instant = false)

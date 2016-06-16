@@ -35,6 +35,7 @@ public class GameLord : MonoBehaviour
 
 	[SerializeField]
 	private string[] _levels = null;
+	public string[] Levels {  get { return _levels; } }
 	[SerializeField]
 	[HideInInspector]
 	private int _levelCount = 0;
@@ -73,6 +74,8 @@ public class GameLord : MonoBehaviour
 
 	private void InitializeGameLord()
 	{
+		_instance = this;
+
 		UnityEngine.SceneManagement.Scene activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
            _currentSceneName = activeScene.name;
            if (_currentSceneName == sceneName_start)
@@ -84,7 +87,7 @@ public class GameLord : MonoBehaviour
 		}
 	}
 
-	private void LoadScene(string sceneName)
+	public void LoadScene(string sceneName)
 	{
 		if (_levels.Contains(sceneName))
 		{

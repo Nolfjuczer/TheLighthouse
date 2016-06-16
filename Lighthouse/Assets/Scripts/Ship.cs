@@ -116,7 +116,14 @@ public class Ship : WandererBehavior
         _trailRenderer.Clear();
         _trailRenderer.enabled = true;
 
-        _circleImage = GameController.Instance.GetProgressCricle(transform.position);
+		GameObject circleGO = InstanceLord.Instance.GetInstance(InstanceLord.InstanceType.IT_CIRCLE);
+		if(circleGO == null)
+		{
+			Debug.LogFormat("Here {0}", this.gameObject.name);
+		}
+		circleGO.SetActive(true);
+		_circleImage = circleGO.GetComponent<Image>();
+        //_circleImage = GameController.Instance.GetProgressCricle(transform.position);
         _circleImage.enabled = false;
         _circleImage.color = Color.white;
 
@@ -140,6 +147,15 @@ public class Ship : WandererBehavior
 
         StartCoroutine(WandererCoroutine());
     }
+
+	void OnDisable()
+	{
+		if(_circleImage != null)
+		{
+			_circleImage.gameObject.SetActive(false);
+			_circleImage = null;
+		}
+	}
 
     public IEnumerator WandererCoroutine()
     {
