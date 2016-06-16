@@ -34,6 +34,23 @@ public class GameController : Singleton<GameController>
     public LightSteering Light;
     public Camera MainCamera;
 
+	private Vector2 _referenceResolution = Vector2.zero;
+
+	protected override void Awake()
+	{
+		base.Awake();
+		GameLord instance = GameLord.Instance;
+		if(instance != null)
+		{
+			
+        }
+		GUILord guiLord = GUILord.Instance;
+		if(guiLord != null)
+		{
+			_referenceResolution = guiLord.ReferenceResolution;
+		}
+	}
+
     public void Update()
     {
         OnBackButton();
@@ -97,11 +114,15 @@ public class GameController : Singleton<GameController>
     public void SetCirclePosition(Image img, Vector3 shipPosition)
     {
         Vector2 ViewportPosition = MainCamera.WorldToViewportPoint(shipPosition);
-        Vector2 WorldObject_ScreenPosition = new Vector2(
-            ((ViewportPosition.x*MainCanvasRectTransform.sizeDelta.x) - (MainCanvasRectTransform.sizeDelta.x*0.5f)),
-            ((ViewportPosition.y*MainCanvasRectTransform.sizeDelta.y) - (MainCanvasRectTransform.sizeDelta.y*0.5f)));
+        //Vector2 WorldObject_ScreenPosition = new Vector2(
+        //    ((ViewportPosition.x*MainCanvasRectTransform.sizeDelta.x) - (MainCanvasRectTransform.sizeDelta.x*0.5f)),
+        //    ((ViewportPosition.y*MainCanvasRectTransform.sizeDelta.y) - (MainCanvasRectTransform.sizeDelta.y*0.5f)));
 
-        img.rectTransform.anchoredPosition = WorldObject_ScreenPosition;
+		Vector2 WorldObject_ScreenPosition = new Vector2(
+			((ViewportPosition.x * _referenceResolution.x) - (_referenceResolution.x * 0.5f)),
+			((ViewportPosition.y * _referenceResolution.y) - (_referenceResolution.y * 0.5f)));
+
+		img.rectTransform.anchoredPosition = WorldObject_ScreenPosition;
     }
     #endregion
 

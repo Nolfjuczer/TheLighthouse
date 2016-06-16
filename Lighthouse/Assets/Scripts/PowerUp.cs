@@ -53,7 +53,7 @@ public class PowerUp : MonoBehaviour
     protected void CleanPowerUp()
     {
         GameController.Instance.ReturnProgressCircle(_circleImage);
-        PowerUpController.Instance.ReturnPowerUp(this);
+		this.gameObject.SetActive(false);
     }
 
     public void OnTriggerEnter2D(Collider2D col2D)

@@ -383,8 +383,9 @@ public class Ship : WandererBehavior
 
         if (_isSuper)
         {
-            PowerUpController.Instance.GetPowerUp(transform.position);
-            _isSuper = false;
+            //PowerUpController.Instance.GetPowerUp(transform.position);
+			PowerUpController.Instance.SpawnPowerUp(transform.position);
+			_isSuper = false;
             _renderer.sprite = Sprites[0];
         }
         _captured = true;

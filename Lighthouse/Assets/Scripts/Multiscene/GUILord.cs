@@ -22,6 +22,7 @@ public class GUILord : Singleton<GUILord>
 		TS_FADE_IN = 2
 	}
 
+	[System.Serializable]
 	public struct GUIStateInfo
 	{
 		public GUIState state;
@@ -33,6 +34,17 @@ public class GUILord : Singleton<GUILord>
 	[HideInInspector]
 	[SerializeField]
 	private int _guiStateInfoCount = 0;
+
+	[SerializeField]
+	private UnityEngine.UI.CanvasScaler _canvasScaler = null;
+
+	public Vector2 ReferenceResolution
+	{
+		get
+		{
+			return _canvasScaler.referenceResolution;
+		}
+	}
 
 	[SerializeField]
 	private UnityEngine.UI.Image _fader = null;

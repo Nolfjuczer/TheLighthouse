@@ -6,20 +6,19 @@ using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 using Random = UnityEngine.Random;
 
-public enum PowerUpType
+public enum PowerUpType : int
 {
     PLightEnlarger = 0,
-    PCaptureBooster,
-    NDirectionSwapper,
-    NCaptureSlower
+    PCaptureBooster = 1,
+    NDirectionSwapper = 2,
+    NCaptureSlower = 3,
+
+	COUNT
 }
 
 public class PowerUpController : Singleton<PowerUpController>
 {
-    public GameObject PowerUpTemplate;
-    public Sprite[] PowerUpSprites;
-
-    public List<PowerUp> PossibleUps = new List<PowerUp>();
+	#region Variables
 
     public Action LightEnlargerBegin;
     public Action LightEnlargerEnd;
@@ -35,33 +34,91 @@ public class PowerUpController : Singleton<PowerUpController>
     private float _directionSwapperTimer;
     private float _captureSlowerTimer;
 
-    public GameObject GetPowerUp(Vector3 position)
-    {
-        GameObject go;
-        if (PossibleUps.Count > 0)
-        {
-            go = PossibleUps[0].gameObject;
-            PossibleUps.RemoveAt(0);
-            go.transform.position = position;
-        }
-        else
-        {
-            go = Instantiate(PowerUpTemplate,position,Quaternion.identity) as GameObject;
-            
-        }
-        PowerUp pu = go.GetComponent<PowerUp>();
-        if (pu == null) go.AddComponent<PowerUp>();
-        pu.Type = (PowerUpType) Random.Range(0, 4);
-        pu.GetComponent<SpriteRenderer>().sprite = PowerUpSprites[(int) pu.Type];
-        go.SetActive(true);
-        return go;
+	[SerializeField]
+	private Transform _transform = null;
+
+	[System.Serializable]
+	public struct PowerUpInfo
+	{
+		public PowerUpType type;
+		public GameObject prefab;
+		//[HideInInspector]
+		public Utility.MemberObjectPool pool;
+	}
+
+	[SerializeField]
+	private int _powerUpInfoCount = 0;
+
+	[SerializeField]
+	private PowerUpInfo[] _powerUpInfos = null;
+
+	#endregion Variables
+
+	#region Monobehaviour Methods
+
+	void OnValidate()
+	{
+		ValidatePowerUpController();
     }
 
-    public void ReturnPowerUp(PowerUp powerUp)
-    {
-        PossibleUps.Add(powerUp);
-        powerUp.gameObject.SetActive(false);
+	protected override void Awake()
+	{
+		base.Awake();
+		InitPowerUpController();
     }
+
+	#endregion Monobehaviour Methods
+
+	#region Methods
+
+	private void ValidatePowerUpController()
+	{
+		_transform = this.GetComponent<Transform>();
+
+		_powerUpInfoCount = (int)PowerUpType.COUNT;
+
+		PowerUpInfo[] oldPowerupInfos = _powerUpInfos;
+		int oldPowerUpInfoCount = oldPowerupInfos != null ? oldPowerupInfos.Length : 0;
+
+		if(oldPowerUpInfoCount != _powerUpInfoCount)
+		{
+			_powerUpInfos = new PowerUpInfo[_powerUpInfoCount];
+		}
+		for(int i = 0;i < _powerUpInfoCount;++i)
+		{
+			if(i < oldPowerUpInfoCount)
+			{
+				_powerUpInfos[i] = oldPowerupInfos[i];
+			}
+			_powerUpInfos[i].type = (PowerUpType)i;
+		}
+    }
+
+	private void InitPowerUpController()
+	{
+		for(int i = 0;i < _powerUpInfoCount;++i)
+		{
+			if(_powerUpInfos[i].prefab != null)
+			{
+				_powerUpInfos[i].pool = new Utility.MemberObjectPool(_powerUpInfos[i].prefab, _transform, 1);
+			}
+		}
+	}
+
+	/** Input type -1 for random */
+	public GameObject SpawnPowerUp(Vector3 position)
+	{
+		GameObject result = null;
+
+		int type = UnityEngine.Random.Range(0, _powerUpInfoCount);
+
+		result = _powerUpInfos[type].pool.GetPooledObject();
+
+		result.transform.position = position;
+		result.SetActive(true);
+
+		return result;
+	}
 
     public void ApplyPowerUp(PowerUpType type)
     {
@@ -145,4 +202,6 @@ public class PowerUpController : Singleton<PowerUpController>
         LightEnlargerEnd();
         GUIController.Instance.PowerUps[0].gameObject.SetActive(false);
     }
+
+	#endregion Methods
 }
