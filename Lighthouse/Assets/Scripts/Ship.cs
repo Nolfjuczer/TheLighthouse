@@ -44,6 +44,8 @@ public class Ship : WandererBehavior
     private bool _fastAvoidance;
     private bool _enlighted;
 
+	private bool _eventsSet = false;
+
     public override void Awake()
     {
         base.Awake();
@@ -100,53 +102,49 @@ public class Ship : WandererBehavior
         _captureTime = CaptureTime;
     }
 
-    public override void OnEnable ()
-    {
-        base.OnEnable();
-                
-        gameObject.transform.localScale = _baseScale;
-        _speed = ShipSpeed;
+	public override void OnEnable()
+	{
+		base.OnEnable();
 
-        WanderDistance /= ShipManoeuvrability;
-        WanderRadius *= ShipManoeuvrability;
+		gameObject.transform.localScale = _baseScale;
+		_speed = ShipSpeed;
 
-        _captureTimer = 0f;
-        _captured = false;
+		WanderDistance /= ShipManoeuvrability;
+		WanderRadius *= ShipManoeuvrability;
 
-        _trailRenderer.Clear();
-        _trailRenderer.enabled = true;
+		_captureTimer = 0f;
+		_captured = false;
+
+		_trailRenderer.Clear();
+		_trailRenderer.enabled = true;
 
 		GameObject circleGO = InstanceLord.Instance.GetInstance(InstanceLord.InstanceType.IT_CIRCLE);
-		if(circleGO == null)
+		if (circleGO == null)
 		{
 			Debug.LogFormat("Here {0}", this.gameObject.name);
 		}
 		circleGO.SetActive(true);
 		_circleImage = circleGO.GetComponent<Image>();
-        //_circleImage = GameController.Instance.GetProgressCricle(transform.position);
-        _circleImage.enabled = false;
-        _circleImage.color = Color.white;
+		//_circleImage = GameController.Instance.GetProgressCricle(transform.position);
+		_circleImage.enabled = false;
+		_circleImage.color = Color.white;
 
-        _isSuper = Random.Range(0f, 1f) > 0.7f;
-        _renderer.sprite = _isSuper ? Sprites[1] : Sprites[0];
+		_isSuper = Random.Range(0f, 1f) > 0.7f;
+		_renderer.sprite = _isSuper ? Sprites[1] : Sprites[0];
 
-        _renderer.enabled = true;
+		_renderer.enabled = true;
 
-        _died = false;
-        _gotToPort = false;
-        _fastAvoidance = false;
-        _enlighted = false;
+		_died = false;
+		_gotToPort = false;
+		_fastAvoidance = false;
+		_enlighted = false;
 
-        _boxCollider.enabled = true;
+		_boxCollider.enabled = true;
 
-        PowerUpController.Instance.CaptureBoosterBegin += CaptureBoostBegin;
-        PowerUpController.Instance.CaptureBoosterEnd += CapturePowerUpEnd;
-        PowerUpController.Instance.CaptureSlowerBegin += CaptureSlowerBegin;
-        PowerUpController.Instance.CaptureSlowerEnd += CapturePowerUpEnd;
-        ActiveController.Instance.OnFreeze += FreezeShip;
+		SetEvents(true);
 
-        StartCoroutine(WandererCoroutine());
-    }
+		StartCoroutine(WandererCoroutine());
+	}
 
 	void OnDisable()
 	{
@@ -155,6 +153,7 @@ public class Ship : WandererBehavior
 			_circleImage.gameObject.SetActive(false);
 			_circleImage = null;
 		}
+		SetEvents(false);
 	}
 
     public IEnumerator WandererCoroutine()
@@ -264,12 +263,8 @@ public class Ship : WandererBehavior
         GameController.Instance.ReturnShip(this);
         gameObject.SetActive(false);
 
-        PowerUpController.Instance.CaptureBoosterBegin -= CaptureBoostBegin;
-        PowerUpController.Instance.CaptureBoosterEnd -= CapturePowerUpEnd;
-        PowerUpController.Instance.CaptureSlowerBegin -= CaptureSlowerBegin;
-        PowerUpController.Instance.CaptureSlowerEnd -= CapturePowerUpEnd;
-        ActiveController.Instance.OnFreeze -= FreezeShip;
-    }
+		SetEvents(false);
+	}
 
     protected void CaptureBoostBegin()
     {
@@ -484,4 +479,26 @@ public class Ship : WandererBehavior
             StartCoroutine("UncaptureByLightHouse");
         }
     }
+
+	private void SetEvents(bool state)
+	{
+		if (!state && _eventsSet)
+		{
+			PowerUpController.Instance.CaptureBoosterBegin -= CaptureBoostBegin;
+			PowerUpController.Instance.CaptureBoosterEnd -= CapturePowerUpEnd;
+			PowerUpController.Instance.CaptureSlowerBegin -= CaptureSlowerBegin;
+			PowerUpController.Instance.CaptureSlowerEnd -= CapturePowerUpEnd;
+			ActiveController.Instance.OnFreeze -= FreezeShip;
+			_eventsSet = false;
+		}
+		if (state && !_eventsSet)
+		{
+			PowerUpController.Instance.CaptureBoosterBegin += CaptureBoostBegin;
+			PowerUpController.Instance.CaptureBoosterEnd += CapturePowerUpEnd;
+			PowerUpController.Instance.CaptureSlowerBegin += CaptureSlowerBegin;
+			PowerUpController.Instance.CaptureSlowerEnd += CapturePowerUpEnd;
+			ActiveController.Instance.OnFreeze += FreezeShip;
+			_eventsSet = true;
+		}
+	}
 }

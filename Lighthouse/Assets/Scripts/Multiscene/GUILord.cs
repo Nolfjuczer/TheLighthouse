@@ -38,6 +38,9 @@ public class GUILord : Singleton<GUILord>
 	[SerializeField]
 	private UnityEngine.UI.CanvasScaler _canvasScaler = null;
 
+	[SerializeField]
+	private Camera _mainUICamera = null;
+
 	public Vector2 ReferenceResolution
 	{
 		get
@@ -74,6 +77,11 @@ public class GUILord : Singleton<GUILord>
 		InitializeGUILord();
     }
 
+	void Start()
+	{
+		StartGUILord();
+    }
+
 	void Update()
 	{
 		ProcesTransition();
@@ -104,7 +112,22 @@ public class GUILord : Singleton<GUILord>
 
 	private void InitializeGUILord()
 	{
-		
+	}
+
+	private void StartGUILord()
+	{
+		switch (_currentGUIState)
+		{
+			case GUIState.GUIS_MENU:
+				_mainUICamera.clearFlags = CameraClearFlags.SolidColor;
+				break;
+			case GUIState.GUIS_LOADING:
+				_mainUICamera.clearFlags = CameraClearFlags.SolidColor;
+				break;
+			case GUIState.GUIS_GAME:
+				_mainUICamera.clearFlags = CameraClearFlags.Nothing;
+				break;
+		}
 	}
 
 	public void ChangeGUIState(GUIState newGUIState, bool instant = false)
@@ -116,6 +139,18 @@ public class GUILord : Singleton<GUILord>
 			_lastGUIState = _currentGUIState;
 			_currentGUIState = newGUIState;
 			_targetGUIState = GUIState.GUIS_NONE;
+			switch(_currentGUIState)
+			{
+				case GUIState.GUIS_MENU:
+					_mainUICamera.clearFlags = CameraClearFlags.SolidColor;
+					break;
+				case GUIState.GUIS_LOADING:
+					_mainUICamera.clearFlags = CameraClearFlags.SolidColor;
+					break;
+				case GUIState.GUIS_GAME:
+					_mainUICamera.clearFlags = CameraClearFlags.Nothing;
+					break;
+			}
 		} else {
 			switch (_currentTransitionState)
 			{
@@ -165,6 +200,19 @@ public class GUILord : Singleton<GUILord>
 
 						SetPanelActive(_currentGUIState, true);
 						SetPanelActive(_lastGUIState, false);
+
+						switch (_currentGUIState)
+						{
+							case GUIState.GUIS_MENU:
+								_mainUICamera.clearFlags = CameraClearFlags.SolidColor;
+								break;
+							case GUIState.GUIS_LOADING:
+								_mainUICamera.clearFlags = CameraClearFlags.SolidColor;
+								break;
+							case GUIState.GUIS_GAME:
+								_mainUICamera.clearFlags = CameraClearFlags.Nothing;
+								break;
+						}
 
 						_currentTransitionState = TransitionState.TS_FADE_IN;
 					}

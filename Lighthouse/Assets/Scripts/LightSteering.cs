@@ -32,8 +32,16 @@ public class LightSteering : MonoBehaviour
         PowerUpController.Instance.LightEnlargerEnd += LightEnlargerEnd;
 	    ActiveController.Instance.OnSecondLight += OnSecondLight;
 	}
+	void OnDisable()
+	{
+		PowerUpController.Instance.DirectionSwapperBegin -= InvertSteeringBegin;
+		PowerUpController.Instance.DirectionSwapperEnd -= InvertSteeringEnd;
+		PowerUpController.Instance.LightEnlargerBegin -= LightEnlargerBegin;
+		PowerUpController.Instance.LightEnlargerEnd -= LightEnlargerEnd;
+		ActiveController.Instance.OnSecondLight -= OnSecondLight;
+	}
 
-    public void OnSecondLight()
+	public void OnSecondLight()
     {
         SecondLight.SetActive(true);
         StartCoroutine(SecondLightCoroutine());

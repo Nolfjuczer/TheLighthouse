@@ -154,7 +154,10 @@ public class GameLord : MonoBehaviour
 	{
 		GUILord instance = GUILord.Instance;
 		ChangeGameState(GameState.GS_LOADING);
-		yield return null;
+		while(instance.IsTransition)
+		{
+			yield return null;
+		}
 		if(_currentSceneName  != "")
 		{
 			UnityEngine.SceneManagement.SceneManager.UnloadScene(_currentSceneName);
