@@ -32,7 +32,8 @@ namespace Utility
 			{
 				_pool[i] = GameObject.Instantiate(_prefab) as GameObject;
 				_pool[i].transform.SetParent(_parent);
-                _pool[i].SetActive(false);
+				_pool[i].transform.localScale = _prefab.transform.localScale;
+				_pool[i].SetActive(false);
 			}
 		}
 
@@ -60,7 +61,8 @@ namespace Utility
 				}
 				_pool[_poolSize] = GameObject.Instantiate(_prefab) as GameObject;
 				_pool[_poolSize].transform.SetParent(_parent);
-				_pool[_poolSize].SetActive(false);
+				_pool[_poolSize].transform.localScale = _prefab.transform.localScale;
+                _pool[_poolSize].SetActive(false);
 				result = _pool[_poolSize];
 				++_poolSize;
 			}

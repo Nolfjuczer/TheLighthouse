@@ -87,7 +87,7 @@ public class ActiveController : Singleton<ActiveController>
 			_unable = false;
 		}
 
-        if (GameLord.Instance.CurrentGameState == GameLord.GameState.GS_GAME && InputManager.Instance.ThisFrameTouch&& CurrentActive != ActiveSkillsEnum.None && !GameController.Instance.Light.Targeted)
+        if (GameLord.Instance.CurrentGameState == GameLord.GameState.GS_GAME && InputManager.Instance.ThisFrameTouch && CurrentActive != ActiveSkillsEnum.None && !GameController.Instance.Light.Targeted)
 		{
             Ray ray = GameController.Instance.MainCamera.ScreenPointToRay(InputManager.Instance.TouchPosition);
             RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
@@ -97,11 +97,16 @@ public class ActiveController : Singleton<ActiveController>
 				_selectedPosition = ray.origin;
 			}
 
-			Image circleImage = GameController.Instance.GetProgressCricle(transform.position);
+			GameObject circleGO = InstanceLord.Instance.GetInstance(InstanceLord.InstanceType.IT_CIRCLE);
+
+			//Image circleImage = GameController.Instance.GetProgressCricle(transform.position);
+			circleGO.SetActive(true);
+			Image circleImage = circleGO.GetComponent<Image>();
 			_activeInfos.Add(new ActiveInfo(CurrentActive, circleImage, _selectedPosition));
 			CurrentActive = ActiveSkillsEnum.None;
 
 		} else {
+			//Debug.LogFormat("Declick");
 			_selectedPosition = Vector3.zero;
             _activeTimer = 0f;
 			if (GameLord.Instance.CurrentGameState == GameLord.GameState.GS_GAME)

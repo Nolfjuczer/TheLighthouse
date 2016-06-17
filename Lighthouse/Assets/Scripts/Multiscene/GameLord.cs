@@ -32,6 +32,10 @@ public class GameLord : MonoBehaviour
 	const string sceneName_start = "Start";
 
 	private string _currentSceneName = "";
+	public string CurrentSceneName {  get { return _currentSceneName; } }
+
+	[SerializeField]
+	private GUILord _guiLord = null;
 
 	[SerializeField]
 	private string[] _levels = null;
@@ -40,6 +44,7 @@ public class GameLord : MonoBehaviour
 	[HideInInspector]
 	private int _levelCount = 0;
 
+	
 	#endregion Variables
 
 	#region Monobehaviour Methods
@@ -53,10 +58,12 @@ public class GameLord : MonoBehaviour
 	{
 		InitializeGameLord();
 	}
-
 	void Start()
 	{
-
+		if(_guiLord == null)
+		{
+			_guiLord = GUILord.Instance;
+		}
 	}
 
 	void Update()
@@ -87,6 +94,23 @@ public class GameLord : MonoBehaviour
 		}
 	}
 
+	public void ChangeGameState(GameState newGameState)
+	{
+		_currentGameState = newGameState;
+		switch (newGameState)
+		{
+			case GameState.GS_MENU:
+				_guiLord.ChangeGUIState(GUILord.GUIState.GUIS_MENU);
+				break;
+			case GameState.GS_LOADING:
+				_guiLord.ChangeGUIState(GUILord.GUIState.GUIS_LOADING);
+				break;
+			case GameState.GS_GAME:
+				_guiLord.ChangeGUIState(GUILord.GUIState.GUIS_GAME);
+				break;
+		}
+	}
+
 	public void LoadScene(string sceneName)
 	{
 		if (_levels.Contains(sceneName))
@@ -97,9 +121,9 @@ public class GameLord : MonoBehaviour
 
 	private IEnumerator LoadSceneCoroutine(string sceneName)
 	{
-		GUILord instance = GUILord.Instance;
-		instance.ChangeGUIState(GUILord.GUIState.GUIS_LOADING);
-		while(instance.IsTransition)
+		ChangeGameState(GameState.GS_LOADING);
+		
+		while(_guiLord.IsTransition)
 		{
 			yield return null;
 		}
@@ -116,10 +140,31 @@ public class GameLord : MonoBehaviour
 		{
 			yield return null;
 		}
-		instance.ChangeGUIState(GUILord.GUIState.GUIS_GAME);
+		_currentSceneName = sceneName;
+		ChangeGameState(GameState.GS_GAME);
 		yield return null;
 	} 
 	
+	public void SwitchToMenu()
+	{
+		StartCoroutine(SwitchToMenuCoroutine());
+	}
+
+	private IEnumerator SwitchToMenuCoroutine()
+	{
+		GUILord instance = GUILord.Instance;
+		ChangeGameState(GameState.GS_LOADING);
+		yield return null;
+		if(_currentSceneName  != "")
+		{
+			UnityEngine.SceneManagement.SceneManager.UnloadScene(_currentSceneName);
+			yield return null;
+			Resources.UnloadUnusedAssets();
+			yield return null;
+		}
+		ChangeGameState(GameState.GS_MENU);
+	}
+
 	#endregion Methods
 	
 }

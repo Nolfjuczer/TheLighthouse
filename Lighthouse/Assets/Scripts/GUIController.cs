@@ -5,7 +5,9 @@ using UnityEngine.UI;
 
 public class GUIController : Singleton<GUIController>
 {
-    public Text Score;
+	#region Variables
+
+	public Text Score;
     public GameObject Pause;
     public Image CurrentActive;
     public GameObject ActiveButtons;
@@ -13,12 +15,31 @@ public class GUIController : Singleton<GUIController>
     public Image[] PowerUps;
     private bool _activeExpanded;
 
-    public void Update()
+	#endregion Variables
+
+	#region Monobehaviour Methods
+
+	void OnEnable()
+	{
+		if(Pause.activeSelf)
+		{
+			Pause.SetActive(false);
+		}
+	}
+
+	public void Update()
     {
-        Score.text = "$ " + GameController.Instance.Money;
+		if (GameLord.Instance.CurrentGameState == GameLord.GameState.GS_GAME)
+		{
+			Score.text = string.Format("$ {0}",GameController.Instance.Money);
+		}
     }
 
-    public void OnPauseClick()
+	#endregion Monobehaviour Methods
+
+	#region Methods
+
+	public void OnPauseClick()
     {
         GameController.Instance.GameState = EGameState.Paused;
         Pause.SetActive(true);
@@ -33,13 +54,14 @@ public class GUIController : Singleton<GUIController>
     public void OnRestartClick()
     {
         GameController.Instance.GameState = EGameState.InGame;
-        SceneManager.LoadScene(1);
+		GameLord.Instance.LoadScene(GameLord.Instance.CurrentSceneName);
     }
 
     public void OnMenuClick()
     {
         GameController.Instance.GameState = EGameState.InGame;
-        SceneManager.LoadScene(0);
+		//SceneManager.LoadScene(0);
+		GameLord.Instance.SwitchToMenu();
     }
 
     public void OnExpandActive()
@@ -54,4 +76,6 @@ public class GUIController : Singleton<GUIController>
         _activeExpanded = false;
         ActiveButtons.SetActive(false);
     }
+
+	#endregion Methods
 }
