@@ -7,24 +7,59 @@ public class GUIController : Singleton<GUIController>
 {
 	#region Variables
 
-	public Text Score;
-    public GameObject Pause;
-    public Image CurrentActive;
-    public GameObject ActiveButtons;
-    public Image[] ActiveIcons;
-    public Image[] PowerUps;
-    private bool _activeExpanded;
+	[SerializeField]
+	private Text Score;
+	[SerializeField]
+	private GameObject Pause;
+	public Image CurrentActive;
+	[SerializeField]
+	private GameObject ActiveButtons;
+	public Image[] ActiveIcons;
+	public Image[] PowerUps;
+	[SerializeField]
+	private bool _activeExpanded;
+
+	public enum HUDState : int
+	{
+		HS_GAME = 0,
+		HS_PAUSE = 1,
+		HS_WIN = 2,
+		HS_LOST = 3,
+
+		HS_COUNT
+	}
+
+	[System.Serializable]
+	public struct HUDStateInfo
+	{
+		public HUDState state;
+		public GameObject panel;
+	}
+
+	[SerializeField]
+	private HUDStateInfo[] _hudStateInfos = null;
+	[HideInInspector]
+	[SerializeField]
+	private int _hudStateInfoCount = 0;
+
+	private HUDState _currentHudState = HUDState.HS_GAME;
 
 	#endregion Variables
 
 	#region Monobehaviour Methods
 
+	void OnValidate()
+	{
+		ValidateGUIController();
+	}
+
 	void OnEnable()
 	{
-		if(Pause.activeSelf)
-		{
-			Pause.SetActive(false);
-		}
+		///*i*/f(Pause.activeSelf)
+		////{
+		//	//Pause.SetActive(false);
+		////}
+		ResetHudState();
 	}
 
 	public void Update()
@@ -42,13 +77,15 @@ public class GUIController : Singleton<GUIController>
 	public void OnPauseClick()
     {
         GameController.Instance.GameState = EGameState.Paused;
-        Pause.SetActive(true);
+		//Pause.SetActive(true);
+		ChangeHudState(HUDState.HS_PAUSE);
     }
 
     public void OnResumeClick()
     {
         GameController.Instance.GameState = EGameState.InGame;
-        Pause.SetActive(false);
+		//Pause.SetActive(false);
+		ChangeHudState(HUDState.HS_GAME);
     }
 
     public void OnRestartClick()
@@ -76,6 +113,51 @@ public class GUIController : Singleton<GUIController>
         _activeExpanded = false;
         ActiveButtons.SetActive(false);
     }
+
+	private void ValidateGUIController()
+	{
+		_hudStateInfoCount = (int)HUDState.HS_COUNT;
+		HUDStateInfo[] oldHudStateInfos = _hudStateInfos;
+		int oldHudStateInfoCount = oldHudStateInfos != null ? oldHudStateInfos.Length : 0;
+		if(oldHudStateInfoCount != _hudStateInfoCount)
+		{
+			_hudStateInfos = new HUDStateInfo[_hudStateInfoCount];
+		}
+		for(int i = 0;i < _hudStateInfoCount;++i)
+		{
+			if(i < oldHudStateInfoCount)
+			{
+				_hudStateInfos[i] = oldHudStateInfos[i];
+			}
+			_hudStateInfos[i].state = (HUDState)i;
+		}
+	}
+
+	private void ResetHudState()
+	{
+		_currentHudState = HUDState.HS_GAME;
+		for(int i = 0;i < _hudStateInfoCount;++i)
+		{
+			HUDState tmpState = (HUDState)i;
+			SetPanelActive(tmpState, tmpState == _currentHudState);
+		}
+	}
+
+	private void SetPanelActive(HUDState state, bool active)
+	{
+		int index = (int)state;
+		if(index >= 0 && index < _hudStateInfoCount)
+		{
+			_hudStateInfos[index].panel.SetActive(active);
+		}
+	}
+
+	public void ChangeHudState(HUDState newState)
+	{
+		SetPanelActive(_currentHudState,false);
+		_currentHudState = newState;
+		SetPanelActive(_currentHudState,true);
+	}
 
 	#endregion Methods
 }
