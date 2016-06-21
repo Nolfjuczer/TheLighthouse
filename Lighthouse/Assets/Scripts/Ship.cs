@@ -95,8 +95,6 @@ public class Ship : WandererBehavior
             gameObject.SetActive(false);
             return;
         }
-        _myAgent.MyGrid = GameController.Instance.MainGrid;
-        _myAgent.TargetObject = GameController.Instance.IslandTransfrom;
 
         _baseScale = gameObject.transform.localScale;
         _speed = ShipManoeuvrability;
@@ -107,7 +105,10 @@ public class Ship : WandererBehavior
 	{
 		base.OnEnable();
 
-		gameObject.transform.localScale = _baseScale;
+        _myAgent.MyGrid = GameController.Instance.MainGrid;
+        _myAgent.TargetObject = GameController.Instance.IslandTransfrom;
+
+        gameObject.transform.localScale = _baseScale;
 		_speed = ShipSpeed;
 
 		WanderDistance /= ShipManoeuvrability;
@@ -261,8 +262,8 @@ public class Ship : WandererBehavior
         PathVisibility();
 
         transform.localScale = Vector3.one;
-        if(_circleImage != null) GameController.Instance.ReturnProgressCircle(_circleImage);
-        GameController.Instance.ReturnShip(this);
+        _circleImage.gameObject.SetActive(false);
+        _circleImage = null;
         gameObject.SetActive(false);
 
 		SetEvents(false);
@@ -327,10 +328,10 @@ public class Ship : WandererBehavior
                     if (Captured && _speed > ship.ShipSpeed)
                     {
                         _speed = ship.ShipSpeed;
-                        breaking = true;
                         continue;
                     }
                 }
+                breaking = true;
             }
         }
         return breaking;

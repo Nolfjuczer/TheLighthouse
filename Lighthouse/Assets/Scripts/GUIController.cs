@@ -61,6 +61,7 @@ public class GUIController : Singleton<GUIController>
 		//	//Pause.SetActive(false);
 		////}
 		ResetHudState();
+	    for (int i = 0; i < Lives.Length; ++i) Lives[i].enabled = true;
 	}
 
 	public void Update()

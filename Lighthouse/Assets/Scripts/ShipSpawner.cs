@@ -19,7 +19,7 @@ public class ShipSpawner : MonoBehaviour
     {
         Vector3 spawnPosition;
         Quaternion spawnQuaternion;
-        Ship ship;
+        GameObject ship;
         while (true)
         {
             if (Delayed)

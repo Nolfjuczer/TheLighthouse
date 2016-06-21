@@ -8,6 +8,13 @@ public class InstanceLord : Singleton<InstanceLord>
 	public enum InstanceType
 	{
 		IT_CIRCLE = 0,
+        IT_FLARE,
+        IT_BUOY,
+        IT_MINE,
+        IT_FERRY,
+        IT_FREIGHTER,
+        IT_KEELBOAT,
+        IT_MOTORBOAT,
 
 		IT_COUNT
 	}
@@ -18,14 +25,14 @@ public class InstanceLord : Singleton<InstanceLord>
 		public InstanceType type;
 		public GameObject prefab;
 		public Transform parent;
-		//[HideInInspector]
+	    public int InitialPoolSize;
+		[HideInInspector]
 		public Utility.MemberObjectPool pool;	
 	}
 
 	[SerializeField]
 	private InstanceTypeInfo[] _instanceTypeInfos = null;
-	[SerializeField]
-	[HideInInspector]
+	[SerializeField, HideInInspector]
 	private int _instanceTypeCount = 0;
 
 	#endregion Variables
@@ -72,7 +79,7 @@ public class InstanceLord : Singleton<InstanceLord>
 		{
 			if(_instanceTypeInfos[i].prefab != null)
 			{
-				_instanceTypeInfos[i].pool = new Utility.MemberObjectPool(_instanceTypeInfos[i].prefab, _instanceTypeInfos[i].parent, 0);
+				_instanceTypeInfos[i].pool = new Utility.MemberObjectPool(_instanceTypeInfos[i].prefab, _instanceTypeInfos[i].parent, _instanceTypeInfos[i].InitialPoolSize);
 			}
 		}
 	}

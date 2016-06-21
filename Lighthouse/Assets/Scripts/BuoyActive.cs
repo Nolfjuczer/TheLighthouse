@@ -6,7 +6,7 @@ public class BuoyActive : Active
     protected override IEnumerator Burn()
     {
         yield return base.Burn();
-        GameController.Instance.ReturnBuoy(this);
+        gameObject.SetActive(false);
     }
 
     public void OnTriggerEnter2D(Collider2D col2D)

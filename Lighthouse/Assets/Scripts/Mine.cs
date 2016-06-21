@@ -41,7 +41,7 @@ public class Mine : MonoBehaviour
 
     public void DisarmMine()
     {
-        GameController.Instance.ReturnMine(this);
+        gameObject.SetActive(false);
     }
 
     public void OnTriggerEnter2D(Collider2D col2D)
