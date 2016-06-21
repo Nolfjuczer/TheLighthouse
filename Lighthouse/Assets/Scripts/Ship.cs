@@ -41,6 +41,7 @@ public class Ship : WandererBehavior
 
     private bool _died;
     private bool _gotToPort;
+
     private bool _fastAvoidance;
     private bool _enlighted;
 
@@ -202,6 +203,9 @@ public class Ship : WandererBehavior
         _particleSystem.Play();
         StartCoroutine(WaitForExplosion());
         _circleImage.enabled = false;
+
+        GameController.Instance.DecreaseHP();
+        GameController.Instance.Money -= 10;
     }
 
     private IEnumerator WaitForExplosion()
@@ -219,8 +223,6 @@ public class Ship : WandererBehavior
             yield return null;
         }
         _particleSystem.Stop();
-
-        GameController.Instance.Money -= 10;
 
         CleanShip();
     }
@@ -287,8 +289,9 @@ public class Ship : WandererBehavior
 #if UNITY_EDITOR
         Debug.DrawRay(transform.position, transform.up.normalized * 2f, Color.red);
 #endif
-        ShipBreak();
-        ObstacleAvoidance();
+        bool breaking = ShipBreak();
+        //if(!_fastAvoidance)
+        //    ObstacleAvoidance();
 
         if (_captured)
         {
@@ -297,19 +300,22 @@ public class Ship : WandererBehavior
             {
                 transform.rotation = Quaternion.Lerp(transform.rotation,
                     Quaternion.LookRotation(Vector3.forward, _currentElement.transform.position - gameObject.transform.position),
-                    Time.deltaTime * /*0.15f **/ ShipManoeuvrability);
+                    Time.deltaTime * ShipManoeuvrability);
                 if( Vector3.Distance(transform.position, _currentElement.transform.position) < 0.2f) NextGridElement();                         
             }
         }
         else
         {
-            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, _wanderDestination), (_fastAvoidance ? 1f : Time.deltaTime * 0.15f));
+            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, _wanderDestination), Time.deltaTime * (_fastAvoidance ? 3f : 0.15f));
         }
-        transform.position += transform.up.normalized * _speed * Time.deltaTime * _speedMultiplier;   
+
+        if(!breaking)
+            transform.position += transform.up.normalized * _speed * Time.deltaTime * _speedMultiplier;   
     }
 
-    public void ShipBreak()
+    public bool ShipBreak()
     {
+        bool breaking = false;
         RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, transform.up.normalized, 1.1f);
         foreach (RaycastHit2D hit in hits)
         {
@@ -321,16 +327,67 @@ public class Ship : WandererBehavior
                     if (Captured && _speed > ship.ShipSpeed)
                     {
                         _speed = ship.ShipSpeed;
+                        breaking = true;
                         continue;
                     }
                 }
             }
         }
+        return breaking;
     }
 
-    public void ObstacleAvoidance(bool flag = false)
+    public void ObstacleAvoided()
     {
-        _fastAvoidance = flag;
+        _fastAvoidance = false;
+        _wanderDestination = Wander();
+    }
+
+    public void ObstacleAvoid(Collider2D collider)
+    {
+        _fastAvoidance = true;
+        if (!Captured)
+        {
+            float shift = 0f;
+            if (collider.gameObject.layer == LayerMask.NameToLayer("Island") || collider.gameObject.layer == LayerMask.NameToLayer("Bouy"))
+            {
+                CircleCollider2D col = collider as CircleCollider2D;
+                shift = col.radius;
+            }
+            else if (collider.gameObject.layer == LayerMask.NameToLayer("Submarine"))
+            {
+                BoxCollider2D col = collider as BoxCollider2D;
+                shift = col.size.x > col.size.y ? col.size.x : col.size.y;
+            }
+            else
+            {
+                return;
+            }
+
+            Vector3 hitPosition = collider.transform.position;
+            float avoidX = collider.transform.position.x - transform.position.x;
+            float avoidY = collider.transform.position.y - transform.position.y;
+            if (avoidX > 0)
+            {
+                _wanderDestination = new Vector3(hitPosition.x - (shift), hitPosition.y, hitPosition.z);
+            }
+            else
+            {
+                _wanderDestination = new Vector3(hitPosition.x + (shift), hitPosition.y, hitPosition.z);
+            }
+            if (avoidY > 0)
+            {
+                _wanderDestination = new Vector3(_wanderDestination.x, hitPosition.y - (shift), hitPosition.z);
+            }
+            else
+            {
+                _wanderDestination = new Vector3(_wanderDestination.x, hitPosition.y + (shift), hitPosition.z);
+            }
+            return;
+        }
+    }
+
+    public void ObstacleAvoidance()
+    {
         RaycastHit2D[] hits = Physics2D.RaycastAll(transform.position, transform.up.normalized, 2.5f);
         foreach (RaycastHit2D hit in hits)
         {

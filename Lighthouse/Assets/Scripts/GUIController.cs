@@ -16,6 +16,7 @@ public class GUIController : Singleton<GUIController>
 	private GameObject ActiveButtons;
 	public Image[] ActiveIcons;
 	public Image[] PowerUps;
+    public Image[] Lives;
 	[SerializeField]
 	private bool _activeExpanded;
 

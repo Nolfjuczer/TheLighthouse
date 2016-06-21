@@ -5,7 +5,8 @@ using System.Collections.Generic;
 public enum EGameState
 {
     InGame,
-    Paused
+    Paused,
+    Lost
 }
 
 public class GameController : Singleton<GameController>
@@ -51,6 +52,15 @@ public class GameController : Singleton<GameController>
 		}
 	}
 
+    protected void OnEnable()
+    {
+        _hp = 3;
+        for (int i = 0; i < 3; ++i)
+        {
+            GUIController.Instance.Lives[i].enabled = i < _hp;
+        }
+    }
+
     public void Update()
     {
         OnBackButton();
@@ -78,7 +88,21 @@ public class GameController : Singleton<GameController>
 
     #region InGame
 
+    private int _hp;
     public int Money;
+
+    public void DecreaseHP()
+    {
+        _hp -= 1;
+        for(int i = 0; i < 3; ++i)
+        {
+            GUIController.Instance.Lives[i].enabled = i < _hp;
+        }
+        if (_hp == 0)
+        {
+            Debug.LogWarning("Game Over");
+        }
+    }
 
     #region Capture
 

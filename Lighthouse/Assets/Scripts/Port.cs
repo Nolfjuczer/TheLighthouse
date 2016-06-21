@@ -15,7 +15,7 @@ public class Port : MonoBehaviour
             }
             else
             {
-                ship.ObstacleAvoidance(true);
+                ship.ObstacleAvoid(gameObject.GetComponent<Collider2D>());
             }
         }
     }
@@ -25,7 +25,7 @@ public class Port : MonoBehaviour
         if (col2D.gameObject.layer == LayerMask.NameToLayer("Ship"))
         {
             Ship ship = col2D.GetComponent<Ship>();
-            ship.ObstacleAvoidance();
+            ship.ObstacleAvoided();
         }
     }
 }

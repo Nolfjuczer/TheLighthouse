@@ -203,6 +203,7 @@ public class Submarine : MonoBehaviour
             _circleImage.fillAmount = _fearTimer;
             yield return null;
         }
+        _fearTimer = 0f;
         _circleImage.enabled = false;
         _mineTimer = 0f;
         StartCoroutine(EmergeCoroutine(false));
@@ -217,6 +218,7 @@ public class Submarine : MonoBehaviour
             _circleImage.fillAmount = _fearTimer;
             yield return null;
         }
+        _fearTimer = 0f;
         _circleImage.enabled = false;
     }
 

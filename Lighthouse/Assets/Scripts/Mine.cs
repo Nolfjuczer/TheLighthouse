@@ -6,6 +6,8 @@ public class Mine : MonoBehaviour
     protected bool _setUp;
     protected Vector3 _baseLocalScale;
 
+    public int Touches;
+
     public bool SetUp
     {
         get { return _setUp; }
@@ -21,6 +23,7 @@ public class Mine : MonoBehaviour
     {
         gameObject.transform.localScale = Vector3.zero;
         StartCoroutine(SetUpMine());
+        Touches = 0;
     }
 
     protected IEnumerator SetUpMine()

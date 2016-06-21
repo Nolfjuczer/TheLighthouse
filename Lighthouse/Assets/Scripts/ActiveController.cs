@@ -28,9 +28,13 @@ public class ActiveController : Singleton<ActiveController>
 	private Vector3 _selectedPosition = Vector3.zero;
 	private float _activationLength = 0.0f;
 
+    [HideInInspector]
     public bool FlareAvailable;
+    [HideInInspector]
     public bool BuoyAvailable;
+    [HideInInspector]
     public bool FreezeAvailable;
+    [HideInInspector]
     public bool SecondAvailable;
 
     private float _flareCooldown;

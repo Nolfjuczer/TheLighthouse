@@ -14,12 +14,6 @@ public class ActiveButton : MonoBehaviour
         new Color(1f, 1f, 0f, 40f/255f),
     };
 
-    //None,
-    //Flare, 255,0,0
-    //Buoy,
-    //Freeze,
-    //SecondLight
-
     public void OnClick()
     {
         switch (Active)
