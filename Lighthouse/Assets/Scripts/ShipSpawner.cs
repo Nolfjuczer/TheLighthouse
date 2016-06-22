@@ -1,6 +1,8 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
 using System.Runtime.Remoting.Messaging;
+using Random = UnityEngine.Random;
 
 public class ShipSpawner : MonoBehaviour
 {
@@ -27,10 +29,10 @@ public class ShipSpawner : MonoBehaviour
                 Delayed = false;
                 yield return new WaitForSeconds(1.5f);
             }
-
+            if(GameController.Instance.GameState == EGameState.End) yield break;
             ship = GameController.Instance.GetShip();
 
-            spawnPosition = new Vector3(spawnPosition.x = Random.Range(transform.position.x, RightRestriction.position.x), transform.position.y, 0f);
+            spawnPosition = new Vector3(spawnPosition.x = Random.Range(Mathf.CeilToInt(transform.position.x), Mathf.FloorToInt(RightRestriction.position.x)), transform.position.y, 0f);
             spawnQuaternion = Quaternion.LookRotation(Vector3.forward, GameController.Instance.IslandTransfrom.position - spawnPosition);
 
             ship.transform.position = spawnPosition;

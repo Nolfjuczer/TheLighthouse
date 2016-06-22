@@ -20,6 +20,9 @@ public class GUIController : Singleton<GUIController>
 	[SerializeField]
 	private bool _activeExpanded;
 
+    public EndGameGUI WinStats;
+    public EndGameGUI LoseStats;
+
 	public enum HUDState : int
 	{
 		HS_GAME = 0,
@@ -76,7 +79,27 @@ public class GUIController : Singleton<GUIController>
 
 	#region Methods
 
-	public void OnPauseClick()
+    public void OnWinGame(int total, ShipCounterType current, ShipCounterType goal)
+    {
+        WinStats.TotalScore.text = string.Format("Cash {0}$", total.ToString());
+        WinStats.FerryScore.text = string.Format("{0} / {1}", current.FerryCount, goal.FerryCount);
+        WinStats.FreighterScore.text = string.Format("{0} / {1}", current.FreighterCount, goal.FreighterCount);
+        WinStats.KeelboatScore.text = string.Format("{0} / {1}", current.KeelboatCount, goal.KeelboatCount);
+        WinStats.MotorboatScore.text = string.Format("{0} / {1}", current.MotorboatCount, goal.MotorboatCount);
+        ChangeHudState(HUDState.HS_WIN);
+    }
+
+    public void OnLoseGame(int total, ShipCounterType current, ShipCounterType goal)
+    {
+        LoseStats.TotalScore.text = string.Format("Cash {0}$", total.ToString());
+        LoseStats.FerryScore.text = string.Format("{0} / {1}", current.FerryCount, goal.FerryCount);
+        LoseStats.FreighterScore.text = string.Format("{0} / {1}", current.FreighterCount, goal.FreighterCount);
+        LoseStats.KeelboatScore.text = string.Format("{0} / {1}", current.KeelboatCount, goal.KeelboatCount);
+        LoseStats.MotorboatScore.text = string.Format("{0} / {1}", current.MotorboatCount, goal.MotorboatCount);
+        ChangeHudState(HUDState.HS_LOST);
+    }
+
+    public void OnPauseClick()
     {
         GameController.Instance.GameState = EGameState.Paused;
 		//Pause.SetActive(true);

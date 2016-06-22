@@ -5,8 +5,17 @@ using AStar;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
+public enum ShipTypeEnum
+{
+    Ferry,
+    Freighter,
+    Keelboat,
+    Motorboat
+}
+
 public class Ship : WandererBehavior
 {
+    public ShipTypeEnum ShipType;
     [Range(1,4)]
     public int ShipManoeuvrability = 1;
     [Range(1, 4)]
@@ -99,9 +108,22 @@ public class Ship : WandererBehavior
         _baseScale = gameObject.transform.localScale;
         _speed = ShipManoeuvrability;
         _captureTime = CaptureTime;
+
+        GameLord.Instance.OnReloadStage += OnReloadStage;
     }
 
-	public override void OnEnable()
+    private void OnReloadStage()
+    {
+        gameObject.SetActive(false);
+    }
+
+    private void OnDestroy()
+    {
+        GameLord.Instance.OnReloadStage -= OnReloadStage;
+    }
+
+
+    public override void OnEnable()
 	{
 		base.OnEnable();
 
@@ -205,8 +227,7 @@ public class Ship : WandererBehavior
         StartCoroutine(WaitForExplosion());
         _circleImage.enabled = false;
 
-        GameController.Instance.DecreaseHP();
-        GameController.Instance.Money -= 10;
+        GameController.Instance.ShipDestroyed();
     }
 
     private IEnumerator WaitForExplosion()
@@ -242,7 +263,8 @@ public class Ship : WandererBehavior
             yield return null;
         }
 
-        GameController.Instance.Money += 10;
+        if(GameController.Instance.GameState != EGameState.End)
+            GameController.Instance.ShipCollected(ShipType);
 
         CleanShip();
     }
@@ -498,6 +520,7 @@ public class Ship : WandererBehavior
     public void OnTriggerEnter2D(Collider2D col2D)
     {
         if (!_renderer.isVisible) return;
+        if (GameController.Instance.GameState == EGameState.End) return;
 
         if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && _captureTimer < CaptureTime && !_gotToPort)
         {
@@ -529,6 +552,8 @@ public class Ship : WandererBehavior
     public void OnTriggerExit2D(Collider2D col2D)
     {
         if (!_renderer.isVisible) return;
+        if (GameController.Instance.GameState == EGameState.End) return;
+
         if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && !_gotToPort)
         {
             _enlighted = false;

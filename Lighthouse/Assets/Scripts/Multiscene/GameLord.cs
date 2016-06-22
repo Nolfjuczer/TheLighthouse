@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
 using System.Linq;
 
@@ -43,6 +44,8 @@ public class GameLord : MonoBehaviour
 	[SerializeField]
 	[HideInInspector]
 	private int _levelCount = 0;
+
+    public Action OnReloadStage;
 
 	
 	#endregion Variables
@@ -113,7 +116,8 @@ public class GameLord : MonoBehaviour
 
 	public void LoadScene(string sceneName)
 	{
-		if (_levels.Contains(sceneName))
+        if (OnReloadStage != null) OnReloadStage();
+        if (_levels.Contains(sceneName))
 		{
 			StartCoroutine(LoadSceneCoroutine(sceneName));
 		}
@@ -146,8 +150,9 @@ public class GameLord : MonoBehaviour
 	} 
 	
 	public void SwitchToMenu()
-	{
-		StartCoroutine(SwitchToMenuCoroutine());
+    {
+        if (OnReloadStage != null) OnReloadStage();
+        StartCoroutine(SwitchToMenuCoroutine());
 	}
 
 	private IEnumerator SwitchToMenuCoroutine()

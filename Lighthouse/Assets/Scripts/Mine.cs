@@ -16,7 +16,18 @@ public class Mine : MonoBehaviour
 
     void Awake()
     {
-        _baseLocalScale = transform.localScale;        
+        _baseLocalScale = transform.localScale;
+        GameLord.Instance.OnReloadStage += OnReloadStage;
+    }
+
+    private void OnReloadStage()
+    {
+        gameObject.SetActive(false);
+    }
+
+    private void OnDestroy()
+    {
+        GameLord.Instance.OnReloadStage -= OnReloadStage;
     }
 
     void OnEnable()

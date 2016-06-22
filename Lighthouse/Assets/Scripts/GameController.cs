@@ -6,7 +6,85 @@ public enum EGameState
 {
     InGame,
     Paused,
-    Lost
+    End
+}
+
+[System.Serializable]
+public class ShipCounterType
+{
+    [SerializeField]
+    private int _ferryCount;
+    [SerializeField]
+    private int _freighterCount;
+    [SerializeField]
+    private int _keelboatCount;
+    [SerializeField]
+    private int _motorboatCount;
+
+    public int FerryCount
+    {
+        get { return _ferryCount; }
+    }
+    public int FreighterCount
+    {
+        get { return _freighterCount; }
+    }
+    public int KeelboatCount
+    {
+        get { return _keelboatCount; }
+    }
+    public int MotorboatCount
+    {
+        get { return _motorboatCount; }
+    }
+
+    public ShipCounterType()
+    {
+        _ferryCount = 0;
+        _freighterCount = 0;
+        _keelboatCount = 0;
+        _motorboatCount = 0;
+    }
+
+    public ShipCounterType(int ferry, int freighter, int keelboat, int motorboat)
+    {
+        _ferryCount = ferry;
+        _freighterCount = freighter;
+        _keelboatCount = keelboat;
+        _motorboatCount = motorboat;
+    }
+
+    public void IncrementCounter(ShipTypeEnum shipType)
+    {
+        switch (shipType)
+        {
+            case ShipTypeEnum.Ferry:
+                _ferryCount += 1;
+                break;
+            case ShipTypeEnum.Freighter:
+                _freighterCount += 1;
+                break;
+            case ShipTypeEnum.Keelboat:
+                _keelboatCount += 1;
+                break;
+            case ShipTypeEnum.Motorboat:
+                _motorboatCount += 1;
+                break;
+        }
+    }
+
+    public bool CompareCounter(ShipCounterType mission)
+    {
+        if (_ferryCount < mission._ferryCount)
+            return false;
+        if (_freighterCount < mission._freighterCount)
+            return false;
+        if (_keelboatCount < mission._keelboatCount)
+            return false;
+        if (_motorboatCount < mission._motorboatCount)
+            return false;
+        return true;
+    }
 }
 
 public class GameController : Singleton<GameController>
@@ -54,7 +132,11 @@ public class GameController : Singleton<GameController>
 
     protected void OnEnable()
     {
+        _gameState = EGameState.InGame;
         _hp = 3;
+        _money = 0;
+        _currentShipCounterState = new ShipCounterType();
+        MainGrid.RegenerateGrid();
     }
 
     public void Update()
@@ -84,10 +166,34 @@ public class GameController : Singleton<GameController>
 
     #region InGame
 
+    private ShipCounterType _currentShipCounterState;
+    public ShipCounterType MissionShipCounterState = new ShipCounterType();
     private int _hp;
-    public int Money;
 
-    public void DecreaseHP()
+    private int _money;
+    public int Money
+    {
+        get { return _money;}
+    }
+
+    public void ShipCollected(ShipTypeEnum shipType)
+    {
+        _money += 10;
+        _currentShipCounterState.IncrementCounter(shipType);
+        if (_currentShipCounterState.CompareCounter(MissionShipCounterState))
+        {
+            _gameState = EGameState.End;
+            GUIController.Instance.OnWinGame(_money, _currentShipCounterState, MissionShipCounterState);
+        }
+    }
+
+    public void ShipDestroyed()
+    {
+        _money -= 10;
+        DecreaseHp();
+    }
+
+    private void DecreaseHp()
     {
         _hp -= 1;
         for(int i = 0; i < 3; ++i)
@@ -96,7 +202,8 @@ public class GameController : Singleton<GameController>
         }
         if (_hp == 0)
         {
-            Debug.LogWarning("Game Over");
+            _gameState = EGameState.End;
+            GUIController.Instance.OnLoseGame(_money, _currentShipCounterState, MissionShipCounterState);
         }
     }
 
