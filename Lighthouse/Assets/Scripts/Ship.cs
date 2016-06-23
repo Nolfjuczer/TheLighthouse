@@ -21,6 +21,7 @@ public class Ship : WandererBehavior
     [Range(1, 4)]
     public int ShipSpeed = 1;
 
+    public SpriteRenderer Outline;
     public Sprite[] Sprites;
 
     public float CaptureTime = 2f;
@@ -138,6 +139,7 @@ public class Ship : WandererBehavior
 
 		_captureTimer = 0f;
 		_captured = false;
+        Outline.enabled = _captured;
 
 		_trailRenderer.Clear();
 		_trailRenderer.enabled = true;
@@ -228,6 +230,50 @@ public class Ship : WandererBehavior
         _circleImage.enabled = false;
 
         GameController.Instance.ShipDestroyed();
+    }
+
+    public void DestoryOnWhirlpool(Vector3 whirlpoolPosition)
+    {
+        if (_captureTimer > 0f) StopCoroutine("CaptureByLightHouse");
+        _trailRenderer.enabled = false;
+        _boxCollider.enabled = false;
+
+        StartCoroutine(WaitForSpin(whirlpoolPosition));
+        _circleImage.enabled = false;
+
+        GameController.Instance.ShipDestroyed();
+    }
+
+    private IEnumerator WaitForSpin(Vector3 whirlpoolPosition)
+    {
+        Vector3 startPos = transform.position;
+        bool expolsion = true;
+        float landTimer = 3f;
+        while (landTimer > 0f)
+        {
+            if (landTimer < 1.5f)
+            {
+                if (expolsion)
+                {
+                    expolsion = false;
+                    _died = true;
+                    _particleSystem.Play();
+                }
+                if (landTimer < 0.5f)
+                {
+                    _renderer.enabled = false;
+                    transform.localScale = _baseScale;
+                }
+                StartCoroutine(WaitForExplosion());
+            }
+            transform.position = Vector3.Lerp(whirlpoolPosition, startPos, Mathf.Clamp01(landTimer / 2f - 1f));
+            transform.localScale = Vector3.Lerp(Vector3.zero, _baseScale, landTimer / 3f);
+            transform.Rotate(Vector3.forward, 250f * Time.deltaTime);
+            landTimer -= Time.deltaTime;
+            landTimer = Mathf.Clamp(landTimer, 0f, float.MaxValue);
+            yield return null;
+        }
+
     }
 
     private IEnumerator WaitForExplosion()
@@ -326,14 +372,16 @@ public class Ship : WandererBehavior
                     Time.deltaTime * ShipManoeuvrability);
                 if( Vector3.Distance(transform.position, _currentElement.transform.position) < 0.2f) NextGridElement();                         
             }
+
+            if (!breaking)
+                transform.position += transform.up.normalized * _speed * Time.deltaTime * _speedMultiplier;
         }
         else
         {
             transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, _wanderDestination), Time.deltaTime * (_fastAvoidance ? 3f : 0.15f));
+            transform.position += transform.up.normalized * _speed * Time.deltaTime * _speedMultiplier;
         }
-
-        if(!breaking)
-            transform.position += transform.up.normalized * _speed * Time.deltaTime * _speedMultiplier;   
+  
     }
 
     public bool ShipBreak()
@@ -480,6 +528,7 @@ public class Ship : WandererBehavior
             _renderer.sprite = Sprites[0];
         }
         _captured = true;
+        Outline.enabled = _captured;
 
         yield return new WaitForSeconds(1f);
 
@@ -502,6 +551,7 @@ public class Ship : WandererBehavior
         PathVisibility();
         _captureTimer = 0f;
         _captured = false;
+        Outline.enabled = _captured;
         _circleImage.enabled = false;
     }
 
@@ -538,7 +588,14 @@ public class Ship : WandererBehavior
 
         if(col2D.gameObject.layer == LayerMask.NameToLayer("Obstacle") && !_captured)
         {
-            DestoryOnIsland();
+            if (col2D.gameObject.GetComponent<Obstacle>().ObstacleType == ObstacleTypeEnum.Island)
+            {
+                DestoryOnIsland();
+            }
+            else
+            {
+                DestoryOnWhirlpool(col2D.gameObject.transform.position);
+            }
             return;
         }
 
