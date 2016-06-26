@@ -7,16 +7,19 @@ using System.Collections.Generic;
 
 public enum ActiveSkillsEnum
 {
-    None,
-    Flare,
-    Buoy,
-    Freeze,
-    SecondLight
+    Flare = 0,
+    Buoy = 1,
+    Freeze = 2,
+    SecondLight = 3,
+
+	COUNT,
+    NONE,
 }
 
 public class ActiveController : Singleton<ActiveController>
 {
-    public ActiveSkillsEnum CurrentActive = ActiveSkillsEnum.None;
+	#region Variables
+	public ActiveSkillsEnum CurrentActive = ActiveSkillsEnum.NONE;
 
     public Action OnFreeze;
     public Action OnSecondLight;
@@ -38,21 +41,84 @@ public class ActiveController : Singleton<ActiveController>
 
 	private const float activeCooldownLength = 4.0f;
 
- //   [System.Serializable]
-	//public struct ActiveInfo
-	//{
-	//	public ActiveInfo(ActiveSkillsEnum activeType, Vector3 position)
-	//	{
-	//		this.activeType = activeType;
-	//		this.position = position;
-	//	}
-	//	public ActiveSkillsEnum activeType;
-	//	public Vector3 position;
-	//}
+	public bool AnySkillActive
+	{
+		get
+		{
+			return CurrentActive != ActiveSkillsEnum.NONE;
+		}
+	}
 
-	//private List<ActiveInfo> _activeInfos = new List<ActiveInfo>();
+	[System.Serializable]
+	public struct ActiveInfo
+	{
+		public ActiveSkillsEnum activeType;
+		public bool unlocked; //this is needed for unlocking abilities in subsequent levels
+		[System.NonSerialized]
+		public float timer;
+		public float cooldown;
+		public const float initialCooldownLength = 4.0f;
+		public System.Action OnActiveSkillUsed;
 
-    public void OnEnable()
+		public bool Availible
+		{
+			get
+			{
+				return timer >= cooldown;
+			}
+		}
+
+		public void Reset()
+		{
+			if (unlocked)
+			{
+				timer = cooldown;
+				GUIController.Instance.UpdateActiveGUI(activeType, 1.0f);
+			} else {
+				timer = 0.0f;
+				GUIController.Instance.UpdateActiveGUI(activeType, 0.0f);
+			}
+		}
+
+		public void UpdateActive(float deltaTime)
+		{
+			timer += deltaTime;
+			float progres = Mathf.Clamp01(timer / cooldown);
+			GUIController.Instance.UpdateActiveGUI(activeType, progres);
+		}
+
+		public void Activate()
+		{
+			if(unlocked)
+			{
+				timer = 0.0f;
+				if(OnActiveSkillUsed != null)
+				{
+					OnActiveSkillUsed();
+				}
+			}
+		}
+	}
+
+	private ActiveInfo[] _activeInfos = null;
+	[HideInInspector]
+	[SerializeField]
+	private int _activeInfoCount = 0;
+
+	#endregion Variables
+
+	#region Monobehaviour Methods
+
+	void OnValidate()
+	{
+		ValidateActiveController();
+	}
+	protected override void Awake()
+	{
+		base.Awake();
+	}
+
+	void OnEnable()
     {
         FlareAvailable = true;
         BuoyAvailable = true;
@@ -66,13 +132,62 @@ public class ActiveController : Singleton<ActiveController>
 	    ProcessInput();
 	}
 
-    public void ProcessInput()
+	#endregion Monobehaviour Methods
+
+	#region Methods
+
+	private void ValidateActiveController()
+	{
+		ActiveInfo[] oldActiveInfos = _activeInfos;
+		int oldActiveInfoCount = oldActiveInfos != null ? oldActiveInfos.Length : 0;
+		_activeInfoCount = (int)ActiveSkillsEnum.COUNT;
+		if(oldActiveInfoCount != _activeInfoCount)
+		{
+			_activeInfos = new ActiveInfo[_activeInfoCount];
+		}
+		for(int i = 0;i < _activeInfoCount;++i)
+		{
+			if(i < oldActiveInfoCount)
+			{
+				_activeInfos[i] = oldActiveInfos[i];
+			} else {
+				_activeInfos[i].unlocked = true;
+				_activeInfos[i].cooldown = ActiveInfo.initialCooldownLength;
+			}
+			_activeInfos[i].activeType = (ActiveSkillsEnum)i;
+		}
+	}
+	private void InitActiveController()
+	{
+		for(int i = 0;i < _activeInfoCount;++i)
+		{
+			_activeInfos[i].Reset();
+		}
+	}
+	private void DeInittActiveController()
+	{
+
+	}
+
+	private void UpdateActives()
+	{
+		float deltaTime = Time.deltaTime;
+		for(int i = 0;i < _activeInfoCount;++i)
+		{
+			if(_activeInfos[i].unlocked)
+			{
+				_activeInfos[i].UpdateActive(deltaTime);
+			}
+		}
+	}
+
+	public void ProcessInput()
     {
-        if (GameLord.Instance.CurrentGameState == GameLord.GameState.GS_GAME && InputManager.Instance.ThisFrameTouch && CurrentActive != ActiveSkillsEnum.None && !GameController.Instance.Light.Targeted)
+        if (GameLord.Instance.CurrentGameState == GameLord.GameState.GS_GAME && InputManager.Instance.ThisFrameTouch && CurrentActive != ActiveSkillsEnum.NONE && !GameController.Instance.Light.Targeted)
 		{
             Ray ray = GameController.Instance.MainCamera.ScreenPointToRay(InputManager.Instance.TouchPosition);
 			UseActive(ray.origin, CurrentActive);
-            CurrentActive = ActiveSkillsEnum.None;
+            CurrentActive = ActiveSkillsEnum.NONE;
 		}
         else
         {
@@ -82,12 +197,22 @@ public class ActiveController : Singleton<ActiveController>
 			}
 			if(InputManager.Instance.PreviousFrameTouch)
 			{
-				CurrentActive = ActiveSkillsEnum.None;
+				CurrentActive = ActiveSkillsEnum.NONE;
 			}
 		}
     }
 
-
+	public void UseActiveSkill(ActiveSkillsEnum type)
+	{
+		int index = (int)type;
+		if(index >= 0 && index < _activeInfoCount)
+		{
+			if(_activeInfos[index].unlocked && _activeInfos[index].Availible)
+			{
+				_activeInfos[index].Activate();
+			}
+		}
+	}
 
     private void UseActive(Vector3 position, ActiveSkillsEnum activeType)
     {
@@ -121,7 +246,7 @@ public class ActiveController : Singleton<ActiveController>
         while (_flareCooldown < activeCooldownLength)
         {
             _flareCooldown += Time.deltaTime;
-            GUIController.Instance.ActiveIcons[0].fillAmount = _flareCooldown/4f;
+            //GUIController.Instance.ActiveIcons[0].fillAmount = _flareCooldown/4f;
             yield return null;
         }
         FlareAvailable = true;
@@ -134,7 +259,7 @@ public class ActiveController : Singleton<ActiveController>
         while (_buoyCooldown < activeCooldownLength)
         {
             _buoyCooldown += Time.deltaTime;
-            GUIController.Instance.ActiveIcons[1].fillAmount = _buoyCooldown / 4f;
+            //GUIController.Instance.ActiveIcons[1].fillAmount = _buoyCooldown / 4f;
             yield return null;
         }
         BuoyAvailable = true;
@@ -147,7 +272,7 @@ public class ActiveController : Singleton<ActiveController>
         while (_freezeCooldown < activeCooldownLength)
         {
             _freezeCooldown += Time.deltaTime;
-            GUIController.Instance.ActiveIcons[2].fillAmount = _freezeCooldown / 4f;
+            //GUIController.Instance.ActiveIcons[2].fillAmount = _freezeCooldown / 4f;
             yield return null;
         }
         FreezeAvailable = true;
@@ -160,9 +285,11 @@ public class ActiveController : Singleton<ActiveController>
         while (_secondCooldown < activeCooldownLength)
         {
             _secondCooldown += Time.deltaTime;
-            GUIController.Instance.ActiveIcons[3].fillAmount = _secondCooldown / 4f;
+            //GUIController.Instance.ActiveIcons[3].fillAmount = _secondCooldown / 4f;
             yield return null;
         }
         SecondAvailable = true;
     }
+
+	#endregion Methods
 }

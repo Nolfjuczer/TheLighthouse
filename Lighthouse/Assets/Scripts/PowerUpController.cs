@@ -42,15 +42,68 @@ public class PowerUpController : Singleton<PowerUpController>
 	{
 		public PowerUpType type;
 		public GameObject prefab;
-		//[HideInInspector]
+		[HideInInspector]
 		public Utility.MemberObjectPool pool;
+		[HideInInspector]
+		[System.NonSerialized]
+		public float timer;
+		public float length;
+		[HideInInspector]
+		[System.NonSerialized]
+		public bool active;
+		[HideInInspector]
+		[System.NonSerialized]
+		public System.Action<bool> OnPowerUpStateChange;
+		public void Activate()
+		{
+			active = true;
+			timer = 0.0f;
+			if(OnPowerUpStateChange != null)
+			{
+				OnPowerUpStateChange(true);
+			}
+		}
+		public void Update(float deltaTime)
+		{
+			timer += deltaTime;
+			float progres = 1.0f - Mathf.Clamp01(timer / length);
+			GUIController.Instance.UpdatePowerUpIcon(type, progres);
+			if(timer > length)
+			{
+				active = false;
+				if(OnPowerUpStateChange != null)
+				{
+					OnPowerUpStateChange(active);
+				}
+			}
+		}
+		public void Reset()
+		{
+			timer = 0.0f;
+			active = false;
+			if(OnPowerUpStateChange != null)
+			{
+				OnPowerUpStateChange(active);
+			}
+		}
 	}
+
+	private const float defaultPowerUpLength = 5.0f;
 
 	[SerializeField]
 	private int _powerUpInfoCount = 0;
 
 	[SerializeField]
 	private PowerUpInfo[] _powerUpInfos = null;
+	public PowerUpInfo[] PowerUpInfos { get { return _powerUpInfos; } }
+
+	public float CaptureTimeScale
+	{
+		get
+		{
+			return 1.0f;
+		}
+	}
 
 	#endregion Variables
 
@@ -65,6 +118,11 @@ public class PowerUpController : Singleton<PowerUpController>
 	{
 		base.Awake();
 		InitPowerUpController();
+    }
+
+	void Update()
+	{
+		UpdatePowerUps();
     }
 
 	#endregion Monobehaviour Methods
@@ -89,6 +147,8 @@ public class PowerUpController : Singleton<PowerUpController>
 			if(i < oldPowerUpInfoCount)
 			{
 				_powerUpInfos[i] = oldPowerupInfos[i];
+			} else {
+				_powerUpInfos[i].length = defaultPowerUpLength;
 			}
 			_powerUpInfos[i].type = (PowerUpType)i;
 		}
@@ -102,6 +162,22 @@ public class PowerUpController : Singleton<PowerUpController>
 			{
 				_powerUpInfos[i].pool = new Utility.MemberObjectPool(_powerUpInfos[i].prefab, _transform, 1);
 			}
+		}
+
+		_powerUpInfos[(int)PowerUpType.PCaptureBooster].OnPowerUpStateChange += OnCaptureBooster;
+		_powerUpInfos[(int)PowerUpType.NCaptureSlower].OnPowerUpStateChange += OnCaptureSlower;
+	}
+
+	private void DeInitPowerUpController()
+	{
+
+	}
+
+	public void ResetPowerUpController()
+	{
+		for(int i = 0;i < _powerUpInfoCount;++i)
+		{
+			_powerUpInfos[i].Reset();
 		}
 	}
 
@@ -120,87 +196,113 @@ public class PowerUpController : Singleton<PowerUpController>
 		return result;
 	}
 
+	private void UpdatePowerUps()
+	{
+		float deltaTime = Time.deltaTime;
+		for(int i = 0;i < _powerUpInfoCount;++i)
+		{
+			if(_powerUpInfos[i].active)
+			{
+				_powerUpInfos[i].Update(deltaTime);
+			}
+		}
+	}
+
     public void ApplyPowerUp(PowerUpType type)
     {
-        switch(type)
-        {
-            case PowerUpType.NCaptureSlower:
-                _captureSlowerTimer = 0f;
-                StartCoroutine(CaptureSlowerEnumerator());
-                break;
-            case PowerUpType.NDirectionSwapper:
-                _directionSwapperTimer = 0f;
-                StartCoroutine(DirectionSwapperEnumerator());
-                break;
-            case PowerUpType.PCaptureBooster:
-                _captureBoosterTimer = 0f;
-                StartCoroutine(CaptureBoosterEnumerator());
-                break;
-            case PowerUpType.PLightEnlarger:
-                _lightEnlargerTimer = 0f;
-                StartCoroutine(LightEnlargerEnumerator());
-                break;
-        }
+		int index = (int)type;
+		if(index >= 0 && index < _powerUpInfoCount)
+		{
+			_powerUpInfos[index].Activate();
+		}
+        //switch(type)
+        //{
+        //    case PowerUpType.NCaptureSlower:
+        //        _captureSlowerTimer = 0f;
+        //        StartCoroutine(CaptureSlowerEnumerator());
+        //        break;
+        //    case PowerUpType.NDirectionSwapper:
+        //        _directionSwapperTimer = 0f;
+        //        StartCoroutine(DirectionSwapperEnumerator());
+        //        break;
+        //    case PowerUpType.PCaptureBooster:
+        //        _captureBoosterTimer = 0f;
+        //        StartCoroutine(CaptureBoosterEnumerator());
+        //        break;
+        //    case PowerUpType.PLightEnlarger:
+        //        _lightEnlargerTimer = 0f;
+        //        StartCoroutine(LightEnlargerEnumerator());
+        //        break;
+        //}
     }
+
+	private void OnCaptureBooster(bool active)
+	{
+
+	}
+	private void OnCaptureSlower(bool active)
+	{
+
+	}
 
     protected IEnumerator CaptureSlowerEnumerator()
     {
         CaptureSlowerBegin();
-        GUIController.Instance.PowerUps[1].fillAmount = 1;
-        GUIController.Instance.PowerUps[1].gameObject.SetActive(true);
+        //GUIController.Instance.PowerUps[1].fillAmount = 1;
+        //GUIController.Instance.PowerUps[1].gameObject.SetActive(true);
         while (_captureSlowerTimer < 5f)
         {
             _captureSlowerTimer += Time.deltaTime;
-            GUIController.Instance.PowerUps[1].fillAmount = (5f - _captureSlowerTimer) / 5f;
+            //GUIController.Instance.PowerUps[1].fillAmount = (5f - _captureSlowerTimer) / 5f;
             yield return null;
         }
         CaptureSlowerEnd();
-        GUIController.Instance.PowerUps[1].gameObject.SetActive(false);
+        //GUIController.Instance.PowerUps[1].gameObject.SetActive(false);
     }
 
     protected IEnumerator CaptureBoosterEnumerator()
     {
         CaptureBoosterBegin();
-        GUIController.Instance.PowerUps[2].fillAmount = 1;
-        GUIController.Instance.PowerUps[2].gameObject.SetActive(true);
+        //GUIController.Instance.PowerUps[2].fillAmount = 1;
+        //GUIController.Instance.PowerUps[2].gameObject.SetActive(true);
         while (_captureBoosterTimer < 5f)
         {
             _captureBoosterTimer += Time.deltaTime;
-            GUIController.Instance.PowerUps[2].fillAmount = (5f - _captureBoosterTimer) / 5f;
+            //GUIController.Instance.PowerUps[2].fillAmount = (5f - _captureBoosterTimer) / 5f;
             yield return null;
         }
         CaptureBoosterEnd();
-        GUIController.Instance.PowerUps[2].gameObject.SetActive(false);
+        //GUIController.Instance.PowerUps[2].gameObject.SetActive(false);
     }
 
     protected IEnumerator DirectionSwapperEnumerator()
     {
         DirectionSwapperBegin();
-        GUIController.Instance.PowerUps[3].fillAmount = 1;
-        GUIController.Instance.PowerUps[3].gameObject.SetActive(true);
+        //GUIController.Instance.PowerUps[3].fillAmount = 1;
+        //GUIController.Instance.PowerUps[3].gameObject.SetActive(true);
         while (_directionSwapperTimer < 5f)
         {
             _directionSwapperTimer += Time.deltaTime;
-            GUIController.Instance.PowerUps[3].fillAmount = (5f - _directionSwapperTimer) / 5f;
+            //GUIController.Instance.PowerUps[3].fillAmount = (5f - _directionSwapperTimer) / 5f;
             yield return null;
         }
         DirectionSwapperEnd();
-        GUIController.Instance.PowerUps[3].gameObject.SetActive(false);
+        //GUIController.Instance.PowerUps[3].gameObject.SetActive(false);
     }
 
     protected IEnumerator LightEnlargerEnumerator()
     {
         LightEnlargerBegin();
-        GUIController.Instance.PowerUps[0].fillAmount = 1;
-        GUIController.Instance.PowerUps[0].gameObject.SetActive(true);
+        //GUIController.Instance.PowerUps[0].fillAmount = 1;
+        //GUIController.Instance.PowerUps[0].gameObject.SetActive(true);
         while (_lightEnlargerTimer < 5f)
         {
             _lightEnlargerTimer += Time.deltaTime;
-            GUIController.Instance.PowerUps[0].fillAmount = (5f - _lightEnlargerTimer) / 5f;
+            //GUIController.Instance.PowerUps[0].fillAmount = (5f - _lightEnlargerTimer) / 5f;
             yield return null;
         }
         LightEnlargerEnd();
-        GUIController.Instance.PowerUps[0].gameObject.SetActive(false);
+        //GUIController.Instance.PowerUps[0].gameObject.SetActive(false);
     }
 
 	#endregion Methods

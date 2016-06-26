@@ -4,7 +4,11 @@ using System.Collections;
 
 public class LightSteering : MonoBehaviour
 {
-    public GameObject SecondLight;
+	#region Variables
+
+	private Transform _transform = null;
+
+	public GameObject SecondLight;
     private bool _targeted;
     public bool Targeted
     {
@@ -17,15 +21,33 @@ public class LightSteering : MonoBehaviour
         set { _activeOn = value; }
     }
 
-    private Vector3 _normalScale = new Vector3(0.4f,0.58f,1f);
     private Vector3 _largeScale = new Vector3(0.7f,0.58f,1f);
+    private Vector3 _normalScale = new Vector3(0.4f,0.58f,1f);
     private Vector3 _smallScale = new Vector3(0.1f, 0.58f, 1f);
 
+	private bool _lightEnlarge = false;
+	private bool _lightShrink = false;
+
     private bool _invertSteering;
-    
-	// Use this for initialization
+
+	private int _shipLayer = 0;
+
+	private float _maxRotateSpeed = 540.0f;
+
+	#endregion Variables
+
+	#region Monobehaviour Methods
+
+	void Awake()
+	{
+		_shipLayer = LayerMask.NameToLayer("Ship");
+		_transform = this.GetComponent<Transform>();
+	}
+	
 	void OnEnable ()
 	{
+		PowerUpController.Instance.PowerUpInfos[(int)PowerUpType.PLightEnlarger].OnPowerUpStateChange += OnLightEnlargeStateChanged;
+
 	    PowerUpController.Instance.DirectionSwapperBegin += InvertSteeringBegin;
         PowerUpController.Instance.DirectionSwapperEnd += InvertSteeringEnd;
         PowerUpController.Instance.LightEnlargerBegin += LightEnlargerBegin;
@@ -34,6 +56,8 @@ public class LightSteering : MonoBehaviour
 	}
 	void OnDisable()
 	{
+		PowerUpController.Instance.PowerUpInfos[(int)PowerUpType.PLightEnlarger].OnPowerUpStateChange -= OnLightEnlargeStateChanged;
+
 		PowerUpController.Instance.DirectionSwapperBegin -= InvertSteeringBegin;
 		PowerUpController.Instance.DirectionSwapperEnd -= InvertSteeringEnd;
 		PowerUpController.Instance.LightEnlargerBegin -= LightEnlargerBegin;
@@ -41,6 +65,28 @@ public class LightSteering : MonoBehaviour
 		ActiveController.Instance.OnSecondLight -= OnSecondLight;
 	}
 
+	void OnTriggerStay2D(Collider2D other)
+	{
+		if(other.gameObject.layer == _shipLayer)
+		{
+			Ship tmpShip = other.gameObject.GetComponent<Ship>();
+			if(tmpShip != null)
+			{
+				float deltaCapture = Time.deltaTime;
+				tmpShip.NotifyCapture(deltaCapture);
+			}
+		}
+	}
+
+	void Update()
+	{
+		//InputGetter();
+		LightControll();
+	}
+
+	#endregion Monobehaviour Methods
+
+	#region Methods
 	public void OnSecondLight()
     {
         SecondLight.SetActive(true);
@@ -72,13 +118,6 @@ public class LightSteering : MonoBehaviour
     {
         _invertSteering = false;
     }
-
-
-    // Update is called once per frame
-    void Update ()
-	{
-	    InputGetter();
-	}
 
     private void InputGetter()
     {
@@ -119,4 +158,44 @@ public class LightSteering : MonoBehaviour
             _targeted = false;
         }
     }
+	private void LightControll()
+	{
+		if(InputManager.Instance.ThisFrameTouch && !ActiveController.Instance.AnySkillActive)
+		{
+			Vector3 worldTouchPoint = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.TouchPosition);
+			Vector3 lighthousePosition = _transform.position;
+			Vector3 boom = worldTouchPoint - lighthousePosition;
+			Vector3 direction = boom.normalized;
+			Quaternion targetRotation = Quaternion.LookRotation(Vector3.forward, direction);
+
+			Quaternion lightRotation = _transform.localRotation;
+			lightRotation = Quaternion.RotateTowards(lightRotation, targetRotation, _maxRotateSpeed * Time.deltaTime);
+			_transform.localRotation = lightRotation;
+		}
+	}
+
+	private void UpdateLightSize()
+	{
+		if( (!_lightShrink && !_lightEnlarge) || (_lightShrink && _lightEnlarge) )
+		{
+			transform.localScale = _normalScale;
+		} else {
+			if(_lightEnlarge)
+			{
+				transform.localScale = _largeScale;
+			}
+			if(_lightShrink)
+			{
+				transform.localScale = _smallScale;
+			}
+		}
+	}
+
+	private void OnLightEnlargeStateChanged(bool active)
+	{
+		_lightEnlarge = active;
+		UpdateLightSize();
+    }
+
+	#endregion Methods
 }

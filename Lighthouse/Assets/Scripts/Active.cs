@@ -3,16 +3,34 @@ using System.Collections;
 
 public abstract class Active : MonoBehaviour
 {
-    public float Time = 4f;
+	#region Variables
 
-    // Use this for initialization
-    public virtual void OnEnable()
+	public float Time = 4f;
+
+	protected int layer_ship;
+
+	#endregion Variables
+
+	#region Monobehaviour Methods
+
+	public virtual void Awake()
+	{
+		layer_ship = LayerMask.NameToLayer("Ship");
+	}
+
+	public virtual void OnEnable()
     {
         StartCoroutine(Burn());
     }
 
-    protected virtual IEnumerator Burn()
+	#endregion Monobehaviour Methods
+
+	#region Methods
+
+	protected virtual IEnumerator Burn()
     {
         yield return new WaitForSeconds(Time);
     }
+
+	#endregion Methods
 }

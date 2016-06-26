@@ -16,23 +16,24 @@ public class ActiveButton : MonoBehaviour
 
     public void OnClick()
     {
-        switch (Active)
-        {
-            case ActiveSkillsEnum.Flare:
-                if (!ActiveController.Instance.FlareAvailable) return;
-                break;
-            case ActiveSkillsEnum.Buoy:
-                if (!ActiveController.Instance.BuoyAvailable) return;
-                break;
-            case ActiveSkillsEnum.Freeze:
-                if (!ActiveController.Instance.FreezeAvailable) return;
-                break;
-            case ActiveSkillsEnum.SecondLight:
-                if (!ActiveController.Instance.SecondAvailable) return;
-                break;
-        }
-        ActiveController.Instance.CurrentActive = Active; 
-        GUIController.Instance.CurrentActive.color = _colors[(int) Active];
-        GUIController.Instance.OnActiveChosen();
+		ActiveController.Instance.UseActiveSkill(Active);
+        //switch (Active)
+        //{
+        //    case ActiveSkillsEnum.Flare:
+        //        if (!ActiveController.Instance.FlareAvailable) return;
+        //        break;
+        //    case ActiveSkillsEnum.Buoy:
+        //        if (!ActiveController.Instance.BuoyAvailable) return;
+        //        break;
+        //    case ActiveSkillsEnum.Freeze:
+        //        if (!ActiveController.Instance.FreezeAvailable) return;
+        //        break;
+        //    case ActiveSkillsEnum.SecondLight:
+        //        if (!ActiveController.Instance.SecondAvailable) return;
+        //        break;
+        //}
+        //ActiveController.Instance.CurrentActive = Active; 
+        //GUIController.Instance.CurrentActive.color = _colors[(int) Active];
+        //GUIController.Instance.OnActiveChosen();
     }
 }

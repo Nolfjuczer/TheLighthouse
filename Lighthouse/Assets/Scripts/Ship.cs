@@ -15,7 +15,29 @@ public enum ShipTypeEnum
 
 public class Ship : WandererBehavior
 {
-    public ShipTypeEnum ShipType;
+	#region Variables
+
+	public enum ShipState
+	{
+		SS_WANDER = 0,
+		SS_CAPTURED = 1,
+		SS_ARRIVED = 2,
+		SS_DEAD = 3,
+
+		SS_COUNT,
+		SS_NONE
+	}
+
+	private ShipState _lastShipState = ShipState.SS_NONE;
+	private ShipState _currentShipState = ShipState.SS_NONE;
+	public ShipState CurrentShipState {  get { return _currentShipState; } }
+
+	private float _captureCoolingTimer = 0.0f;
+	private float _captureCoolingLength = 0.25f;
+	private float _captureProgres = 0.0f;
+	private float _captureToCoolTimeRatio = 0.5f;
+
+	public ShipTypeEnum ShipType;
     [Range(1,4)]
     public int ShipManoeuvrability = 1;
     [Range(1, 4)]
@@ -30,6 +52,14 @@ public class Ship : WandererBehavior
     public bool Captured
     {
         get { return _captured;}
+		private set
+		{
+			_captured = value;
+			if (Outline != null)
+			{
+				Outline.enabled = _captured;
+			}
+		}
     }
 
     private SpriteRenderer _renderer;
@@ -57,7 +87,11 @@ public class Ship : WandererBehavior
 
 	private bool _eventsSet = false;
 
-    public override void Awake()
+	#endregion Variables
+
+	#region Monobehaviour Methods
+
+	public override void Awake()
     {
         base.Awake();
         _renderer = GetComponent<SpriteRenderer>();
@@ -113,18 +147,12 @@ public class Ship : WandererBehavior
         GameLord.Instance.OnReloadStage += OnReloadStage;
     }
 
-    private void OnReloadStage()
-    {
-        gameObject.SetActive(false);
-    }
-
     private void OnDestroy()
     {
         GameLord.Instance.OnReloadStage -= OnReloadStage;
     }
 
-
-    public override void OnEnable()
+	public override void OnEnable()
 	{
 		base.OnEnable();
 
@@ -138,8 +166,7 @@ public class Ship : WandererBehavior
 		WanderRadius *= ShipManoeuvrability;
 
 		_captureTimer = 0f;
-		_captured = false;
-        Outline.enabled = _captured;
+		Captured = false;
 
 		_trailRenderer.Clear();
 		_trailRenderer.enabled = true;
@@ -182,7 +209,76 @@ public class Ship : WandererBehavior
 		SetEvents(false);
 	}
 
-    public IEnumerator WandererCoroutine()
+	public void OnTriggerEnter2D(Collider2D col2D)
+	{
+		if (!_renderer.isVisible) return;
+		if (GameController.Instance.GameState == EGameState.End) return;
+
+		if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && _captureTimer < CaptureTime && !_gotToPort)
+		{
+			_enlighted = true;
+			StopCoroutine("UncaptureByLightHouse");
+			StartCoroutine("CaptureByLightHouse");
+			return;
+		}
+
+		if (col2D.gameObject.layer == LayerMask.NameToLayer("Ship") && !Captured)
+		{
+			DestoryOnIsland();
+			return;
+		}
+
+		if (col2D.gameObject.layer == LayerMask.NameToLayer("Obstacle") && !Captured)
+		{
+			if (col2D.gameObject.GetComponent<Obstacle>().ObstacleType == ObstacleTypeEnum.Island)
+			{
+				DestoryOnIsland();
+			}
+			else
+			{
+				DestoryOnWhirlpool(col2D.gameObject.transform.position);
+			}
+			return;
+		}
+
+		if (col2D.gameObject.layer == LayerMask.NameToLayer("Mine"))
+		{
+			DestoryOnIsland();
+			return;
+		}
+	}
+
+	public void OnTriggerExit2D(Collider2D col2D)
+	{
+		if (!_renderer.isVisible) return;
+		if (GameController.Instance.GameState == EGameState.End) return;
+
+		if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && !_gotToPort)
+		{
+			_enlighted = false;
+			if (Captured) return;
+			StopCoroutine("CaptureByLightHouse");
+			StartCoroutine("UncaptureByLightHouse");
+		}
+	}
+
+	public void Update()
+	{
+		//ShipMovement();
+		ProcesShipState();
+	}
+
+	#endregion Monobehaviour Methods
+
+	#region Old Methods
+
+	private void OnReloadStage()
+	{
+		gameObject.SetActive(false);
+	}
+
+
+	public IEnumerator WandererCoroutine()
     {
         //targetIsland
         _wanderDestination = GameController.Instance.IslandTransfrom.position - gameObject.transform.position;
@@ -207,11 +303,7 @@ public class Ship : WandererBehavior
         yield return new WaitForSeconds(4f);
         _frozen = false;
     }
-	
-	public void Update ()
-	{
-	    ShipMovement();
-	}
+
 
     public void GetToPort()
     {
@@ -362,7 +454,7 @@ public class Ship : WandererBehavior
         //if(!_fastAvoidance)
         //    ObstacleAvoidance();
 
-        if (_captured)
+        if (Captured)
         {
             GameController.Instance.SetCirclePosition(_circleImage, gameObject.transform.position);
             if (_currentElement != null)
@@ -370,11 +462,16 @@ public class Ship : WandererBehavior
                 transform.rotation = Quaternion.Lerp(transform.rotation,
                     Quaternion.LookRotation(Vector3.forward, _currentElement.transform.position - gameObject.transform.position),
                     Time.deltaTime * ShipManoeuvrability);
-                if( Vector3.Distance(transform.position, _currentElement.transform.position) < 0.2f) NextGridElement();                         
+				if (Vector3.Distance(transform.position, _currentElement.transform.position) < 0.2f)
+				{
+					NextGridElement();                         
+				}
             }
 
-            if (!breaking)
-                transform.position += transform.up.normalized * _speed * Time.deltaTime * _speedMultiplier;
+			if (!breaking)
+			{
+				transform.position += transform.up.normalized * _speed * Time.deltaTime * _speedMultiplier;
+			}
         }
         else
         {
@@ -527,8 +624,7 @@ public class Ship : WandererBehavior
 			_isSuper = false;
             _renderer.sprite = Sprites[0];
         }
-        _captured = true;
-        Outline.enabled = _captured;
+		Captured = true;
 
         yield return new WaitForSeconds(1f);
 
@@ -550,8 +646,7 @@ public class Ship : WandererBehavior
         }
         PathVisibility();
         _captureTimer = 0f;
-        _captured = false;
-        Outline.enabled = _captured;
+		Captured = false;
         _circleImage.enabled = false;
     }
 
@@ -565,59 +660,6 @@ public class Ship : WandererBehavior
         if (_currentElement != null) _currentElement.UsePoint(false, this);
         _currentElement = _myAgent.Path[0] as WaterGridElement;
         _myAgent.Path.RemoveAt(0);
-    }
-
-    public void OnTriggerEnter2D(Collider2D col2D)
-    {
-        if (!_renderer.isVisible) return;
-        if (GameController.Instance.GameState == EGameState.End) return;
-
-        if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && _captureTimer < CaptureTime && !_gotToPort)
-        {
-            _enlighted = true;
-            StopCoroutine("UncaptureByLightHouse");
-            StartCoroutine("CaptureByLightHouse");
-            return;
-        }
-
-        if (col2D.gameObject.layer == LayerMask.NameToLayer("Ship") && !_captured)
-        {
-            DestoryOnIsland();
-            return;
-        }
-
-        if(col2D.gameObject.layer == LayerMask.NameToLayer("Obstacle") && !_captured)
-        {
-            if (col2D.gameObject.GetComponent<Obstacle>().ObstacleType == ObstacleTypeEnum.Island)
-            {
-                DestoryOnIsland();
-            }
-            else
-            {
-                DestoryOnWhirlpool(col2D.gameObject.transform.position);
-            }
-            return;
-        }
-
-        if (col2D.gameObject.layer == LayerMask.NameToLayer("Mine"))
-        {
-            DestoryOnIsland();
-            return;
-        }
-    }
-
-    public void OnTriggerExit2D(Collider2D col2D)
-    {
-        if (!_renderer.isVisible) return;
-        if (GameController.Instance.GameState == EGameState.End) return;
-
-        if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && !_gotToPort)
-        {
-            _enlighted = false;
-            if (_captured) return;
-            StopCoroutine("CaptureByLightHouse");
-            StartCoroutine("UncaptureByLightHouse");
-        }
     }
 
 	private void SetEvents(bool state)
@@ -641,4 +683,114 @@ public class Ship : WandererBehavior
 			_eventsSet = true;
 		}
 	}
+
+	#endregion Old Methods
+
+	#region Methods
+
+	private void ChangeShipState(ShipState newShipState)
+	{
+		_lastShipState = _currentShipState;
+		OnStateExit();
+		_currentShipState = newShipState;
+		OnStateEnter();
+	}
+
+	private void OnStateExit()
+	{
+		switch (_currentShipState)
+		{
+			case ShipState.SS_WANDER:
+				break;
+			case ShipState.SS_CAPTURED:
+				break;
+			case ShipState.SS_ARRIVED:
+				break;
+			case ShipState.SS_DEAD:
+				break;
+		}
+	}
+	private void OnStateEnter()
+	{
+		switch (_currentShipState)
+		{
+			case ShipState.SS_WANDER:
+				break;
+			case ShipState.SS_CAPTURED:
+				break;
+			case ShipState.SS_ARRIVED:
+				break;
+			case ShipState.SS_DEAD:
+				break;
+		}
+	}
+
+	private void ProcesShipState()
+	{
+		switch (_currentShipState)
+		{
+			case ShipState.SS_WANDER:
+				ProcesShipCapture();
+                ShipMovement();
+				break;
+			case ShipState.SS_CAPTURED:
+				ProcesShipCapture();
+                ShipMovement();
+				break;
+			case ShipState.SS_ARRIVED:
+				break;
+			case ShipState.SS_DEAD:
+				break;
+		}
+	}
+
+	private void ProcesShipCapture()
+	{
+		float deltaTime = Time.deltaTime;
+		_captureCoolingTimer += deltaTime;
+		if(_captureCoolingTimer > _captureCoolingLength)
+		{
+			_captureProgres -= deltaTime * _captureToCoolTimeRatio;
+		}
+		if(_captureProgres >= CaptureTime)
+		{
+			if(_currentShipState == ShipState.SS_WANDER)
+			{
+				ChangeShipState(ShipState.SS_CAPTURED);
+			}
+		}
+		if(_captureProgres < 0.0f)
+		{
+			if(_currentShipState == ShipState.SS_CAPTURED)
+			{
+				ChangeShipState(ShipState.SS_WANDER);
+			}
+		}
+
+		if(_circleImage != null)
+		{
+			if (_captureProgres > 0.0f)
+			{
+				_circleImage.enabled = true;
+				_circleImage.fillAmount = Mathf.Clamp01(_captureProgres / CaptureTime);
+			} else {
+				_circleImage.enabled = false;
+			}
+		}
+	}
+
+	public void NotifyCapture(float deltaCapture)
+	{
+		_captureCoolingTimer = 0.0f;
+		_captureProgres += deltaCapture;
+		if (_circleImage == null)
+		{
+			GameObject circleGO = InstanceLord.Instance.GetInstance(InstanceLord.InstanceType.IT_CIRCLE);
+			circleGO.SetActive(true);
+			_circleImage = circleGO.GetComponent<Image>();
+			_circleImage.enabled = true;
+		}
+	}
+
+	#endregion Methods
 }

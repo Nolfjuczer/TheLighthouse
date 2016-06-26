@@ -3,26 +3,11 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-public class GUIController : Singleton<GUIController>
+public sealed class GUIController : Singleton<GUIController>
 {
 	#region Variables
 
-	[SerializeField]
-	private Text Score;
-	[SerializeField]
-	private GameObject Pause;
-	public Image CurrentActive;
-	[SerializeField]
-	private GameObject ActiveButtons;
-	public Image[] ActiveIcons;
-	public Image[] PowerUps;
-    public Image[] Lives;
-	[SerializeField]
-	private bool _activeExpanded;
-
-    public EndGameGUI WinStats;
-    public EndGameGUI LoseStats;
-
+	#region General GUI
 	public enum HUDState : int
 	{
 		HS_GAME = 0,
@@ -48,6 +33,80 @@ public class GUIController : Singleton<GUIController>
 
 	private HUDState _currentHudState = HUDState.HS_GAME;
 
+	[SerializeField]
+	private GameObject Pause;
+	[SerializeField]
+	private GameObject ActiveButtons;
+
+	#endregion General GUI
+
+	#region Score GUI
+
+	[SerializeField]
+	private Text Score;
+	public Image[] Lives;
+
+	public EndGameGUI WinStats;
+	public EndGameGUI LoseStats;
+
+	#endregion Score GUI
+
+	#region Active Skills GUI
+
+	[System.Serializable]
+	public struct ActiveSkillGUIInfo
+	{
+		public static Color disabledColor = new Color(0.1f, 0.1f, 0.1f, 40.0f / 255.0f);
+		public static Color[] defaultColors = new Color[]
+		{
+			new Color(1f, 0f, 0f, 40f/255f),
+			new Color(0f, 1f, 0f, 40f/255f),
+			new Color(0f, 1f, 1f, 40f/255f),
+			new Color(1f, 1f, 0f, 40f/255f)
+		};
+
+		public ActiveSkillsEnum type;
+		[HideInInspector]
+		public GameObject panel;
+		public Color defaultBackgroundColor;
+		public Image background;
+		public Button button;
+
+		public void UpdateActive(float progres)
+		{
+			bool active = progres > 0.0f;
+			if(panel.activeSelf != active)
+			{
+				panel.SetActive(active);
+			}
+			if (active)
+			{
+				background.fillAmount = progres;
+				background.color = Color.Lerp(disabledColor, defaultBackgroundColor, progres);
+				button.interactable = progres >= 1.0f;
+			}
+		}
+	}
+
+	[SerializeField]
+	private ActiveSkillGUIInfo[] _activeSkillGUIInfos = null;
+	[HideInInspector]
+	[SerializeField]
+	private int _activeSkillsGUIInfoCount = 0;
+
+	public Image CurrentActive;
+	[SerializeField]
+	private bool _activeExpanded;
+
+	#endregion Active Skills GUI
+
+	#region Power Ups GUI
+
+	[SerializeField]
+	private Image[] PowerUps;
+	
+	#endregion Power Ups GUI
+
 	#endregion Variables
 
 	#region Monobehaviour Methods
@@ -59,10 +118,6 @@ public class GUIController : Singleton<GUIController>
 
 	void OnEnable()
 	{
-		///*i*/f(Pause.activeSelf)
-		////{
-		//	//Pause.SetActive(false);
-		////}
 		ResetHudState();
 	    for (int i = 0; i < Lives.Length; ++i) Lives[i].enabled = true;
 	}
@@ -156,6 +211,23 @@ public class GUIController : Singleton<GUIController>
 			}
 			_hudStateInfos[i].state = (HUDState)i;
 		}
+
+		ActiveSkillGUIInfo[] oldActiveSkillGUIInfos = _activeSkillGUIInfos;
+		int oldActiveSkillGUIInfoCount = oldActiveSkillGUIInfos != null ? oldActiveSkillGUIInfos.Length : 0;
+		_activeSkillsGUIInfoCount = (int)ActiveSkillsEnum.COUNT;
+		if(oldActiveSkillGUIInfoCount != _activeSkillsGUIInfoCount)
+		{
+			_activeSkillGUIInfos = new ActiveSkillGUIInfo[_activeSkillsGUIInfoCount];
+		}
+		for(int i = 0;i < _activeSkillsGUIInfoCount;++i)
+		{
+			if(i < oldActiveSkillGUIInfoCount)
+			{
+				_activeSkillGUIInfos[i] = oldActiveSkillGUIInfos[i];
+			}
+			_activeSkillGUIInfos[i].type = (ActiveSkillsEnum)i;
+			_activeSkillGUIInfos[i].defaultBackgroundColor = ActiveSkillGUIInfo.defaultColors[i];
+		}
 	}
 
 	private void ResetHudState()
@@ -182,6 +254,28 @@ public class GUIController : Singleton<GUIController>
 		SetPanelActive(_currentHudState,false);
 		_currentHudState = newState;
 		SetPanelActive(_currentHudState,true);
+	}
+
+	public void UpdatePowerUpIcon(PowerUpType type, float progres)
+	{
+		int index = (int)type;
+		if(index >= 0 && index  < (int)PowerUpType.COUNT)
+		{
+			bool active = progres > 0.0f;
+            PowerUps[index].gameObject.SetActive(active);
+			if(active)
+			{
+				PowerUps[index].fillAmount = progres;
+			}
+		}
+	}
+	public void UpdateActiveGUI(ActiveSkillsEnum type, float progres)
+	{
+		int index = (int)type;
+		if(index >= 0 && index < _activeSkillsGUIInfoCount)
+		{
+			_activeSkillGUIInfos[index].UpdateActive(progres);
+		}
 	}
 
 	#endregion Methods
