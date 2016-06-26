@@ -66,7 +66,6 @@ public sealed class GUIController : Singleton<GUIController>
 		};
 
 		public ActiveSkillsEnum type;
-		[HideInInspector]
 		public GameObject panel;
 		public Color defaultBackgroundColor;
 		public Image background;
@@ -94,7 +93,8 @@ public sealed class GUIController : Singleton<GUIController>
 	[SerializeField]
 	private int _activeSkillsGUIInfoCount = 0;
 
-	public Image CurrentActive;
+	[SerializeField]
+	private Image _activeSkillScreen;
 	[SerializeField]
 	private bool _activeExpanded;
 
@@ -102,9 +102,19 @@ public sealed class GUIController : Singleton<GUIController>
 
 	#region Power Ups GUI
 
+	[System.Serializable]
+	public struct PowerUpInfo
+	{
+		public PowerUpType type;
+		public Image image;
+	}
+
 	[SerializeField]
-	private Image[] PowerUps;
-	
+	private PowerUpInfo[] _powerUpInfos = null;
+	[HideInInspector]
+	[SerializeField]
+	private int _powerUpInfoCount = 0;
+
 	#endregion Power Ups GUI
 
 	#endregion Variables
@@ -189,7 +199,7 @@ public sealed class GUIController : Singleton<GUIController>
 
     public void OnActiveChosen()
     {
-        CurrentActive.gameObject.SetActive(true);
+        //CurrentActive.gameObject.SetActive(true);
         _activeExpanded = false;
         ActiveButtons.SetActive(false);
     }
@@ -228,6 +238,22 @@ public sealed class GUIController : Singleton<GUIController>
 			_activeSkillGUIInfos[i].type = (ActiveSkillsEnum)i;
 			_activeSkillGUIInfos[i].defaultBackgroundColor = ActiveSkillGUIInfo.defaultColors[i];
 		}
+
+		PowerUpInfo[] oldPowerUpInfos = _powerUpInfos;
+		int oldPowerUpInfoCount = oldPowerUpInfos != null ? oldPowerUpInfos.Length : 0;
+		_powerUpInfoCount = (int)PowerUpType.COUNT;
+		if(oldPowerUpInfoCount != _powerUpInfoCount)
+		{
+			_powerUpInfos = new PowerUpInfo[_powerUpInfoCount];
+		}
+		for(int i = 0;i < _powerUpInfoCount;++i)
+		{
+			if(i < oldPowerUpInfoCount)
+			{
+				_powerUpInfos[i] = oldPowerUpInfos[i];
+			}
+			_powerUpInfos[i].type = (PowerUpType)i;
+		}
 	}
 
 	private void ResetHudState()
@@ -254,18 +280,38 @@ public sealed class GUIController : Singleton<GUIController>
 		SetPanelActive(_currentHudState,false);
 		_currentHudState = newState;
 		SetPanelActive(_currentHudState,true);
+		OnHudStateChanged(newState);
+    }
+
+	private void OnHudStateChanged(HUDState newState)
+	{
+		switch(newState)
+		{
+			case HUDState.HS_GAME:
+				Time.timeScale = 1.0f;
+				break;
+			case HUDState.HS_PAUSE:
+				Time.timeScale = 0.0f;
+				break;
+			case HUDState.HS_WIN:
+				Time.timeScale = 0.0f;
+				break;
+			case HUDState.HS_LOST:
+				Time.timeScale = 0.0f;
+				break;
+		}
 	}
 
 	public void UpdatePowerUpIcon(PowerUpType type, float progres)
 	{
 		int index = (int)type;
-		if(index >= 0 && index  < (int)PowerUpType.COUNT)
+		if(index >= 0 && index  < _powerUpInfoCount)
 		{
 			bool active = progres > 0.0f;
-            PowerUps[index].gameObject.SetActive(active);
+            _powerUpInfos[index].image.gameObject.SetActive(active);
 			if(active)
 			{
-				PowerUps[index].fillAmount = progres;
+				_powerUpInfos[index].image.fillAmount = progres;
 			}
 		}
 	}
@@ -276,6 +322,22 @@ public sealed class GUIController : Singleton<GUIController>
 		{
 			_activeSkillGUIInfos[index].UpdateActive(progres);
 		}
+	}
+
+	public void ShowSkillScreen(ActiveSkillsEnum type)
+	{
+		ActiveButtons.SetActive(false);
+		int index = (int)type;
+		if(index  >= 0 && index < _activeSkillsGUIInfoCount)
+		{
+			_activeSkillScreen.gameObject.SetActive(true);
+			_activeSkillScreen.color = _activeSkillGUIInfos[index].defaultBackgroundColor;
+		}
+	}
+	public void HideActiveSkills()
+	{
+		ActiveButtons.SetActive(false);
+		_activeSkillScreen.gameObject.SetActive(false);
 	}
 
 	#endregion Methods

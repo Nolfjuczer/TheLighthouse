@@ -19,7 +19,7 @@ public enum ActiveSkillsEnum
 public class ActiveController : Singleton<ActiveController>
 {
 	#region Variables
-	public ActiveSkillsEnum CurrentActive = ActiveSkillsEnum.NONE;
+	private ActiveSkillsEnum CurrentActive = ActiveSkillsEnum.NONE;
 
     public Action OnFreeze;
     public Action OnSecondLight;
@@ -54,6 +54,8 @@ public class ActiveController : Singleton<ActiveController>
 	{
 		public ActiveSkillsEnum activeType;
 		public bool unlocked; //this is needed for unlocking abilities in subsequent levels
+		[HideInInspector]
+		public bool showSkillScreen;
 		[System.NonSerialized]
 		public float timer;
 		public float cooldown;
@@ -100,7 +102,9 @@ public class ActiveController : Singleton<ActiveController>
 		}
 	}
 
+	[SerializeField]
 	private ActiveInfo[] _activeInfos = null;
+	public ActiveInfo[] ActiveInfos { get { return _activeInfos; } }
 	[HideInInspector]
 	[SerializeField]
 	private int _activeInfoCount = 0;
@@ -120,17 +124,20 @@ public class ActiveController : Singleton<ActiveController>
 
 	void OnEnable()
     {
-        FlareAvailable = true;
-        BuoyAvailable = true;
-        FreezeAvailable = true;
-        SecondAvailable = true;
+		//FlareAvailable = true;
+		//BuoyAvailable = true;
+		//FreezeAvailable = true;
+		//SecondAvailable = true;
+		ResetActiveController();
     } 
+
 
 	// Update is called once per frame
 	void Update ()
 	{
-	    ProcessInput();
-	}
+	    //ProcessInput();
+		ProcessActives();
+    }
 
 	#endregion Monobehaviour Methods
 
@@ -153,20 +160,31 @@ public class ActiveController : Singleton<ActiveController>
 			} else {
 				_activeInfos[i].unlocked = true;
 				_activeInfos[i].cooldown = ActiveInfo.initialCooldownLength;
-			}
+            }
 			_activeInfos[i].activeType = (ActiveSkillsEnum)i;
-		}
+			_activeInfos[i].showSkillScreen = _activeInfos[i].activeType == ActiveSkillsEnum.Buoy || _activeInfos[i].activeType == ActiveSkillsEnum.Flare;
+        }
 	}
 	private void InitActiveController()
 	{
-		for(int i = 0;i < _activeInfoCount;++i)
-		{
-			_activeInfos[i].Reset();
-		}
+
 	}
 	private void DeInittActiveController()
 	{
 
+	}
+
+	private void ResetActiveInfos()
+	{
+		for (int i = 0; i < _activeInfoCount; ++i)
+		{
+			_activeInfos[i].Reset();
+		}
+	}
+
+	public void ResetActiveController()
+	{
+		ResetActiveInfos();
 	}
 
 	private void UpdateActives()
@@ -202,7 +220,19 @@ public class ActiveController : Singleton<ActiveController>
 		}
     }
 
-	public void UseActiveSkill(ActiveSkillsEnum type)
+	public void ProcessActives()
+	{
+		if(GameLord.Instance.CurrentGameState == GameLord.GameState.GS_GAME && CurrentActive != ActiveSkillsEnum.NONE)
+		{
+			if(!InputManager.Instance.PreviousFrameTouch && InputManager.Instance.ThisFrameTouch)
+			{
+				Vector3 worldTouchPoint = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.TouchPosition);
+				PlaceActive(CurrentActive, worldTouchPoint);
+			}
+		}
+	}
+
+	public void ActivateSkill(ActiveSkillsEnum type)
 	{
 		int index = (int)type;
 		if(index >= 0 && index < _activeInfoCount)
@@ -210,13 +240,44 @@ public class ActiveController : Singleton<ActiveController>
 			if(_activeInfos[index].unlocked && _activeInfos[index].Availible)
 			{
 				_activeInfos[index].Activate();
+				if(_activeInfos[index].showSkillScreen)
+				{
+					GUIController.Instance.ShowSkillScreen(_activeInfos[index].activeType);
+					CurrentActive = _activeInfos[index].activeType;
+				} else {
+					GUIController.Instance.HideActiveSkills();
+				}
 			}
 		}
+	}
+	private void PlaceActive(ActiveSkillsEnum type, Vector3 position)
+	{
+		position.z = 0.0f;
+		switch(type)
+		{
+			case ActiveSkillsEnum.Buoy:
+				GameController.Instance.GetBuoy(position);
+				break;
+			case ActiveSkillsEnum.Flare:
+				GameController.Instance.GetFlare(position);
+				break;
+		}
+		_activeInfos[(int)CurrentActive].timer = 0.0f;
+        GUIController.Instance.HideActiveSkills();
+		CurrentActive = ActiveSkillsEnum.NONE;
+	}
+	public void CancelActive()
+	{
+		if(CurrentActive != ActiveSkillsEnum.NONE)
+		{
+			_activeInfos[(int)CurrentActive].Reset();
+		}
+		GUIController.Instance.HideActiveSkills();
 	}
 
     private void UseActive(Vector3 position, ActiveSkillsEnum activeType)
     {
-        GUIController.Instance.CurrentActive.gameObject.SetActive(false);
+        //GUIController.Instance.CurrentActive.gameObject.SetActive(false);
         GameController.Instance.Light.ActiveOn = false;
         switch (activeType)
         {

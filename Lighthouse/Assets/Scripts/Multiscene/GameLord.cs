@@ -100,6 +100,11 @@ public class GameLord : MonoBehaviour
 	public void ChangeGameState(GameState newGameState)
 	{
 		_currentGameState = newGameState;
+		OnGameStateChanged(_currentGameState);
+    }
+
+	private void OnGameStateChanged(GameState newGameState)
+	{
 		switch (newGameState)
 		{
 			case GameState.GS_MENU:
@@ -110,6 +115,7 @@ public class GameLord : MonoBehaviour
 				break;
 			case GameState.GS_GAME:
 				_guiLord.ChangeGUIState(GUILord.GUIState.GUIS_GAME);
+				//ActiveController.Instance.ResetActiveController();
 				break;
 		}
 	}

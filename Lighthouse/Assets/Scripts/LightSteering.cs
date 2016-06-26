@@ -40,29 +40,39 @@ public class LightSteering : MonoBehaviour
 
 	void Awake()
 	{
-		_shipLayer = LayerMask.NameToLayer("Ship");
-		_transform = this.GetComponent<Transform>();
+		InitializeLightSteering();
 	}
 	
+	void OnDestroy()
+	{
+		DeInitializeLightSteering();
+	}
+
 	void OnEnable ()
 	{
 		PowerUpController.Instance.PowerUpInfos[(int)PowerUpType.PLightEnlarger].OnPowerUpStateChange += OnLightEnlargeStateChanged;
+		PowerUpController.Instance.PowerUpInfos[(int)PowerUpType.NDirectionSwapper].OnPowerUpStateChange += OnDirectionSwap;
 
-	    PowerUpController.Instance.DirectionSwapperBegin += InvertSteeringBegin;
-        PowerUpController.Instance.DirectionSwapperEnd += InvertSteeringEnd;
-        PowerUpController.Instance.LightEnlargerBegin += LightEnlargerBegin;
-        PowerUpController.Instance.LightEnlargerEnd += LightEnlargerEnd;
-	    ActiveController.Instance.OnSecondLight += OnSecondLight;
+		ActiveController.Instance.ActiveInfos[(int)ActiveSkillsEnum.SecondLight].OnActiveSkillUsed += OnSecondLight;
+
+		//PowerUpController.Instance.DirectionSwapperBegin += InvertSteeringBegin;
+        //PowerUpController.Instance.DirectionSwapperEnd += InvertSteeringEnd;
+        //PowerUpController.Instance.LightEnlargerBegin += LightEnlargerBegin;
+        //PowerUpController.Instance.LightEnlargerEnd += LightEnlargerEnd;
+	    //ActiveController.Instance.OnSecondLight += OnSecondLight;
 	}
 	void OnDisable()
 	{
-		PowerUpController.Instance.PowerUpInfos[(int)PowerUpType.PLightEnlarger].OnPowerUpStateChange -= OnLightEnlargeStateChanged;
+		//PowerUpController.Instance.PowerUpInfos[(int)PowerUpType.PLightEnlarger].OnPowerUpStateChange -= OnLightEnlargeStateChanged;
+		//PowerUpController.Instance.PowerUpInfos[(int)PowerUpType.NDirectionSwapper].OnPowerUpStateChange -= OnDirectionSwap;
+		//
+		//ActiveController.Instance.ActiveInfos[(int)ActiveSkillsEnum.SecondLight].OnActiveSkillUsed -= OnSecondLight;
 
-		PowerUpController.Instance.DirectionSwapperBegin -= InvertSteeringBegin;
-		PowerUpController.Instance.DirectionSwapperEnd -= InvertSteeringEnd;
-		PowerUpController.Instance.LightEnlargerBegin -= LightEnlargerBegin;
-		PowerUpController.Instance.LightEnlargerEnd -= LightEnlargerEnd;
-		ActiveController.Instance.OnSecondLight -= OnSecondLight;
+		//PowerUpController.Instance.DirectionSwapperBegin -= InvertSteeringBegin;
+		//PowerUpController.Instance.DirectionSwapperEnd -= InvertSteeringEnd;
+		//PowerUpController.Instance.LightEnlargerBegin -= LightEnlargerBegin;
+		//PowerUpController.Instance.LightEnlargerEnd -= LightEnlargerEnd;
+		//ActiveController.Instance.OnSecondLight -= OnSecondLight;
 	}
 
 	void OnTriggerStay2D(Collider2D other)
@@ -72,7 +82,7 @@ public class LightSteering : MonoBehaviour
 			Ship tmpShip = other.gameObject.GetComponent<Ship>();
 			if(tmpShip != null)
 			{
-				float deltaCapture = Time.deltaTime;
+				float deltaCapture = PowerUpController.Instance.CaptureTimeScale * Time.deltaTime;
 				tmpShip.NotifyCapture(deltaCapture);
 			}
 		}
@@ -87,6 +97,18 @@ public class LightSteering : MonoBehaviour
 	#endregion Monobehaviour Methods
 
 	#region Methods
+
+	private void InitializeLightSteering()
+	{
+		_shipLayer = LayerMask.NameToLayer("Ship");
+		_transform = this.GetComponent<Transform>();
+	}
+
+	private void DeInitializeLightSteering()
+	{
+		
+	}
+
 	public void OnSecondLight()
     {
         SecondLight.SetActive(true);
@@ -99,65 +121,66 @@ public class LightSteering : MonoBehaviour
         SecondLight.SetActive(false);
     }
 
-    public void LightEnlargerBegin()
-    {
-        transform.localScale = _largeScale;
-    }
+    //public void LightEnlargerBegin()
+    //{
+    //    transform.localScale = _largeScale;
+    //}
+	//
+    //public void LightEnlargerEnd()
+    //{
+    //    transform.localScale = _normalScale;
+    //}
+	//
+    //public void InvertSteeringBegin()
+    //{
+    //    _invertSteering = true;
+    //}
+	//
+    //public void InvertSteeringEnd()
+    //{
+    //    _invertSteering = false;
+    //}
 
-    public void LightEnlargerEnd()
-    {
-        transform.localScale = _normalScale;
-    }
+    //private void InputGetter()
+    //{
+    //    if(_activeOn) return;
+    //    if (InputManager.Instance.ThisFrameTouch)
+    //    {
+    //        if (_targeted && InputManager.Instance.PreviousFrameTouch)
+    //        {
+    //            Vector2 prev = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.PreviousTouchPosition);
+    //            Vector2 cur = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.TouchPosition);
+	//
+    //            float angle = Vector2.Angle(prev, cur);
+	//
+    //            Vector3 cross = Vector3.Cross(prev,cur);
+    //            angle = cross.z > 0 ? angle : 360f - angle ;
+	//
+    //            gameObject.transform.Rotate(Vector3.forward, _invertSteering ? -angle : angle);
+    //        }
+    //        else
+    //        {
+    //            Ray ray = GameController.Instance.MainCamera.ScreenPointToRay(InputManager.Instance.TouchPosition);
+    //            RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
+    //            if (hit.collider != null)
+    //            {
+    //                if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Light"))
+    //                {
+    //                    _targeted = true;
+    //                }
+    //            }
+    //            else
+    //            {
+    //                _targeted = false;
+    //            }
+    //        }
+    //    }
+    //    else
+    //    {
+    //        _targeted = false;
+    //    }
+    //}
 
-    public void InvertSteeringBegin()
-    {
-        _invertSteering = true;
-    }
-
-    public void InvertSteeringEnd()
-    {
-        _invertSteering = false;
-    }
-
-    private void InputGetter()
-    {
-        if(_activeOn) return;
-        if (InputManager.Instance.ThisFrameTouch)
-        {
-            if (_targeted && InputManager.Instance.PreviousFrameTouch)
-            {
-                Vector2 prev = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.PreviousTouchPosition);
-                Vector2 cur = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.TouchPosition);
-
-                float angle = Vector2.Angle(prev, cur);
-
-                Vector3 cross = Vector3.Cross(prev,cur);
-                angle = cross.z > 0 ? angle : 360f - angle ;
-
-                gameObject.transform.Rotate(Vector3.forward, _invertSteering ? -angle : angle);
-            }
-            else
-            {
-                Ray ray = GameController.Instance.MainCamera.ScreenPointToRay(InputManager.Instance.TouchPosition);
-                RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
-                if (hit.collider != null)
-                {
-                    if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Light"))
-                    {
-                        _targeted = true;
-                    }
-                }
-                else
-                {
-                    _targeted = false;
-                }
-            }
-        }
-        else
-        {
-            _targeted = false;
-        }
-    }
 	private void LightControll()
 	{
 		if(InputManager.Instance.ThisFrameTouch && !ActiveController.Instance.AnySkillActive)
@@ -166,6 +189,10 @@ public class LightSteering : MonoBehaviour
 			Vector3 lighthousePosition = _transform.position;
 			Vector3 boom = worldTouchPoint - lighthousePosition;
 			Vector3 direction = boom.normalized;
+			if(_invertSteering)
+			{
+				direction = -direction;
+			}
 			Quaternion targetRotation = Quaternion.LookRotation(Vector3.forward, direction);
 
 			Quaternion lightRotation = _transform.localRotation;
@@ -190,12 +217,16 @@ public class LightSteering : MonoBehaviour
 			}
 		}
 	}
-
+	
 	private void OnLightEnlargeStateChanged(bool active)
 	{
 		_lightEnlarge = active;
 		UpdateLightSize();
     }
+	private void OnDirectionSwap(bool active)
+	{
+		_invertSteering = active;
+	}
 
 	#endregion Methods
 }

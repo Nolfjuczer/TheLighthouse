@@ -97,11 +97,16 @@ public class PowerUpController : Singleton<PowerUpController>
 	private PowerUpInfo[] _powerUpInfos = null;
 	public PowerUpInfo[] PowerUpInfos { get { return _powerUpInfos; } }
 
+	private bool _captureFaster = false;
+	private bool _captureSlower = false;
+	private float _defaultCaptureTimeScale = 1.0f;
+	private float _currentCaptureTimeScale = 1.0f;
+
 	public float CaptureTimeScale
 	{
 		get
 		{
-			return 1.0f;
+			return _currentCaptureTimeScale;
 		}
 	}
 
@@ -179,7 +184,10 @@ public class PowerUpController : Singleton<PowerUpController>
 		{
 			_powerUpInfos[i].Reset();
 		}
-	}
+		_captureFaster = false;
+		_captureSlower = false;
+		UpdateCaptureTimeScale();
+    }
 
 	/** Input type -1 for random */
 	public GameObject SpawnPowerUp(Vector3 position)
@@ -236,14 +244,33 @@ public class PowerUpController : Singleton<PowerUpController>
         //}
     }
 
+	private void UpdateCaptureTimeScale()
+	{
+		if( (_captureFaster && _captureSlower) || (!_captureFaster && !_captureSlower) )
+		{
+			_currentCaptureTimeScale = _defaultCaptureTimeScale;
+		}else {
+			if(_captureFaster)
+			{
+				_currentCaptureTimeScale = 1.5f * _defaultCaptureTimeScale;
+			}
+			if(_captureSlower)
+			{
+				_currentCaptureTimeScale = 0.5f * _defaultCaptureTimeScale;
+			}
+		}
+	}
+
 	private void OnCaptureBooster(bool active)
 	{
-
-	}
+		_captureFaster = active;
+		UpdateCaptureTimeScale();
+    }
 	private void OnCaptureSlower(bool active)
 	{
-
-	}
+		_captureSlower = active;
+		UpdateCaptureTimeScale();
+    }
 
     protected IEnumerator CaptureSlowerEnumerator()
     {

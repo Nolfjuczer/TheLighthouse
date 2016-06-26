@@ -16,7 +16,7 @@ public class ActiveButton : MonoBehaviour
 
     public void OnClick()
     {
-		ActiveController.Instance.UseActiveSkill(Active);
+		ActiveController.Instance.ActivateSkill(Active);
         //switch (Active)
         //{
         //    case ActiveSkillsEnum.Flare:

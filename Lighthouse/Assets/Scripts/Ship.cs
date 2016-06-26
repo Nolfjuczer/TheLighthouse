@@ -51,7 +51,7 @@ public class Ship : WandererBehavior
 
     public bool Captured
     {
-        get { return _captured;}
+        get{ return _currentShipState == ShipState.SS_CAPTURED;}
 		private set
 		{
 			_captured = value;
@@ -86,6 +86,9 @@ public class Ship : WandererBehavior
     private bool _enlighted;
 
 	private bool _eventsSet = false;
+
+	private float _wanderTimer = 0.0f;
+	private float _wanderChangeInterval = 3.0f;
 
 	#endregion Variables
 
@@ -196,7 +199,11 @@ public class Ship : WandererBehavior
 
 		SetEvents(true);
 
-		StartCoroutine(WandererCoroutine());
+		_wanderDestination = GameController.Instance.IslandTransfrom.position - gameObject.transform.position;
+		_wanderTimer = 0.0f;
+
+		ChangeShipState(ShipState.SS_WANDER);
+		//StartCoroutine(WandererCoroutine());
 	}
 
 	void OnDisable()
@@ -214,13 +221,13 @@ public class Ship : WandererBehavior
 		if (!_renderer.isVisible) return;
 		if (GameController.Instance.GameState == EGameState.End) return;
 
-		if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && _captureTimer < CaptureTime && !_gotToPort)
-		{
-			_enlighted = true;
-			StopCoroutine("UncaptureByLightHouse");
-			StartCoroutine("CaptureByLightHouse");
-			return;
-		}
+		//if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && _captureTimer < CaptureTime && !_gotToPort)
+		//{
+		//	_enlighted = true;
+		//	StopCoroutine("UncaptureByLightHouse");
+		//	StartCoroutine("CaptureByLightHouse");
+		//	return;
+		//}
 
 		if (col2D.gameObject.layer == LayerMask.NameToLayer("Ship") && !Captured)
 		{
@@ -253,13 +260,13 @@ public class Ship : WandererBehavior
 		if (!_renderer.isVisible) return;
 		if (GameController.Instance.GameState == EGameState.End) return;
 
-		if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && !_gotToPort)
-		{
-			_enlighted = false;
-			if (Captured) return;
-			StopCoroutine("CaptureByLightHouse");
-			StartCoroutine("UncaptureByLightHouse");
-		}
+		//if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && !_gotToPort)
+		//{
+		//	_enlighted = false;
+		//	if (Captured) return;
+		//	StopCoroutine("CaptureByLightHouse");
+		//	StartCoroutine("UncaptureByLightHouse");
+		//}
 	}
 
 	public void Update()
@@ -308,13 +315,15 @@ public class Ship : WandererBehavior
     public void GetToPort()
     {
         _gotToPort = true;
+		ChangeShipState(ShipState.SS_ARRIVED);
         StartCoroutine(ArriveToLand());
     }
 
     public void DestoryOnIsland()
     {
-        if(_captureTimer > 0f) StopCoroutine("CaptureByLightHouse");
-        _trailRenderer.enabled = false;
+		ChangeShipState(ShipState.SS_DEAD);
+		//if(_captureTimer > 0f) StopCoroutine("CaptureByLightHouse");
+		_trailRenderer.enabled = false;
         _boxCollider.enabled = false;
 
         _particleSystem.Play();
@@ -326,7 +335,8 @@ public class Ship : WandererBehavior
 
     public void DestoryOnWhirlpool(Vector3 whirlpoolPosition)
     {
-        if (_captureTimer > 0f) StopCoroutine("CaptureByLightHouse");
+		ChangeShipState(ShipState.SS_DEAD);
+		//if (_captureTimer > 0f) StopCoroutine("CaptureByLightHouse");
         _trailRenderer.enabled = false;
         _boxCollider.enabled = false;
 
@@ -475,6 +485,13 @@ public class Ship : WandererBehavior
         }
         else
         {
+			_wanderTimer += Time.deltaTime;
+			if(_wanderTimer > _wanderChangeInterval)
+			{
+				_wanderTimer = 0.0f;
+				_wanderDestination = Wander();
+			}
+
             transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, _wanderDestination), Time.deltaTime * (_fastAvoidance ? 3f : 0.15f));
             transform.position += transform.up.normalized * _speed * Time.deltaTime * _speedMultiplier;
         }
@@ -666,20 +683,24 @@ public class Ship : WandererBehavior
 	{
 		if (!state && _eventsSet)
 		{
-			PowerUpController.Instance.CaptureBoosterBegin -= CaptureBoostBegin;
-			PowerUpController.Instance.CaptureBoosterEnd -= CapturePowerUpEnd;
-			PowerUpController.Instance.CaptureSlowerBegin -= CaptureSlowerBegin;
-			PowerUpController.Instance.CaptureSlowerEnd -= CapturePowerUpEnd;
-			ActiveController.Instance.OnFreeze -= FreezeShip;
-			_eventsSet = false;
+			//PowerUpController.Instance.CaptureBoosterBegin -= CaptureBoostBegin;
+			//PowerUpController.Instance.CaptureBoosterEnd -= CapturePowerUpEnd;
+			//PowerUpController.Instance.CaptureSlowerBegin -= CaptureSlowerBegin;
+			//PowerUpController.Instance.CaptureSlowerEnd -= CapturePowerUpEnd;
+
+			//ActiveController.Instance.OnFreeze -= FreezeShip;
+			ActiveController.Instance.ActiveInfos[(int)ActiveSkillsEnum.Freeze].OnActiveSkillUsed -= FreezeShip;
+            _eventsSet = false;
 		}
 		if (state && !_eventsSet)
 		{
-			PowerUpController.Instance.CaptureBoosterBegin += CaptureBoostBegin;
-			PowerUpController.Instance.CaptureBoosterEnd += CapturePowerUpEnd;
-			PowerUpController.Instance.CaptureSlowerBegin += CaptureSlowerBegin;
-			PowerUpController.Instance.CaptureSlowerEnd += CapturePowerUpEnd;
-			ActiveController.Instance.OnFreeze += FreezeShip;
+			//PowerUpController.Instance.CaptureBoosterBegin += CaptureBoostBegin;
+			//PowerUpController.Instance.CaptureBoosterEnd += CapturePowerUpEnd;
+			//PowerUpController.Instance.CaptureSlowerBegin += CaptureSlowerBegin;
+			//PowerUpController.Instance.CaptureSlowerEnd += CapturePowerUpEnd;
+
+			//ActiveController.Instance.OnFreeze += FreezeShip;
+			ActiveController.Instance.ActiveInfos[(int)ActiveSkillsEnum.Freeze].OnActiveSkillUsed += FreezeShip;
 			_eventsSet = true;
 		}
 	}
@@ -698,11 +719,12 @@ public class Ship : WandererBehavior
 
 	private void OnStateExit()
 	{
-		switch (_currentShipState)
+		switch (_lastShipState)
 		{
 			case ShipState.SS_WANDER:
 				break;
 			case ShipState.SS_CAPTURED:
+				PathVisibility();
 				break;
 			case ShipState.SS_ARRIVED:
 				break;
@@ -715,12 +737,31 @@ public class Ship : WandererBehavior
 		switch (_currentShipState)
 		{
 			case ShipState.SS_WANDER:
+				Outline.enabled = false;
 				break;
 			case ShipState.SS_CAPTURED:
+				Outline.enabled = true;
+				if(_lastShipState == ShipState.SS_WANDER)
+				{
+					_myAgent.CalculatePath();
+					_myAgent.Path.RemoveAt(0);
+					PathVisibility(true);
+					NextGridElement();
+
+					if (_isSuper)
+					{
+						//PowerUpController.Instance.GetPowerUp(transform.position);
+						PowerUpController.Instance.SpawnPowerUp(transform.position);
+						_isSuper = false;
+						_renderer.sprite = Sprites[0];
+					}
+				}
 				break;
 			case ShipState.SS_ARRIVED:
+				Outline.enabled = false;
 				break;
 			case ShipState.SS_DEAD:
+				Outline.enabled = false;
 				break;
 		}
 	}
@@ -752,25 +793,23 @@ public class Ship : WandererBehavior
 		{
 			_captureProgres -= deltaTime * _captureToCoolTimeRatio;
 		}
-		if(_captureProgres >= CaptureTime)
+
+		_captureProgres = Mathf.Clamp(_captureProgres, 0.0f, CaptureTime);
+
+		if (_currentShipState == ShipState.SS_WANDER && _captureProgres >= CaptureTime)
 		{
-			if(_currentShipState == ShipState.SS_WANDER)
-			{
-				ChangeShipState(ShipState.SS_CAPTURED);
-			}
+			ChangeShipState(ShipState.SS_CAPTURED);
 		}
-		if(_captureProgres < 0.0f)
+		if(_currentShipState == ShipState.SS_CAPTURED && _captureProgres <= 0.0f)
 		{
-			if(_currentShipState == ShipState.SS_CAPTURED)
-			{
-				ChangeShipState(ShipState.SS_WANDER);
-			}
+			ChangeShipState(ShipState.SS_WANDER);
 		}
 
 		if(_circleImage != null)
 		{
 			if (_captureProgres > 0.0f)
 			{
+				GameController.Instance.SetCirclePosition(_circleImage, transform.position);
 				_circleImage.enabled = true;
 				_circleImage.fillAmount = Mathf.Clamp01(_captureProgres / CaptureTime);
 			} else {

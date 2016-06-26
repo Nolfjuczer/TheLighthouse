@@ -112,6 +112,10 @@ public class GUILord : Singleton<GUILord>
 
 	private void InitializeGUILord()
 	{
+		for(int i = 0;i < _guiStateInfoCount;++i)
+		{
+			_guiStateInfos[i].panel.SetActive(_guiStateInfos[i].state == GUIState.GUIS_MENU);
+		}
 	}
 
 	private void StartGUILord()
@@ -227,7 +231,8 @@ public class GUILord : Singleton<GUILord>
 
 						_fader.gameObject.SetActive(false);
 						_currentTransitionState = TransitionState.TS_NONE;
-					}
+						PostGUIStateChange(_currentGUIState);
+                    }
 				}
 				break;
 		}
@@ -242,6 +247,17 @@ public class GUILord : Singleton<GUILord>
 			{
 				_guiStateInfos[index].panel.SetActive(active);
             }
+		}
+	}
+
+	private void PostGUIStateChange(GUIState newGUIState)
+	{
+		switch(newGUIState)
+		{
+			case GUIState.GUIS_MENU:
+				break;
+			case GUIState.GUIS_GAME:
+				break;
 		}
 	}
 
