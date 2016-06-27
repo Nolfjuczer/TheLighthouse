@@ -5,7 +5,7 @@ public class InstanceLord : Singleton<InstanceLord>
 {
 	#region Variables
 
-	public enum InstanceType
+	public enum InstanceType : int
 	{
 		IT_CIRCLE = 0,
         IT_FLARE,
@@ -15,6 +15,7 @@ public class InstanceLord : Singleton<InstanceLord>
         IT_FREIGHTER,
         IT_KEELBOAT,
         IT_MOTORBOAT,
+		IT_ALERT,
 
 		IT_COUNT
 	}

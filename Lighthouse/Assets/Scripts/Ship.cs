@@ -4,6 +4,7 @@ using System.Collections;
 using AStar;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
+using System.Linq;
 
 public enum ShipTypeEnum
 {
@@ -49,6 +50,12 @@ public class Ship : WandererBehavior
     public float CaptureTime = 2f;
     private float _captureTime;
 
+	private int _layer_obstacle = 0;
+	private int _layer_ship = 0;
+	private int _layerMask =0;
+
+	private GameObject _spawnedAlert = null;
+
     public bool Captured
     {
         get{ return _currentShipState == ShipState.SS_CAPTURED;}
@@ -90,9 +97,22 @@ public class Ship : WandererBehavior
 	private float _wanderTimer = 0.0f;
 	private float _wanderChangeInterval = 3.0f;
 
+	[SerializeField]
+	private BoxCollider2D _collider;
+	[SerializeField]
+	private Transform _transform = null;
+
+	//private float _checkDistance = 1.5f;
+
 	#endregion Variables
 
 	#region Monobehaviour Methods
+
+	void OnValidate()
+	{
+		_transform = this.GetComponent<Transform>();
+		_collider = this.GetComponent<BoxCollider2D>();
+	}
 
 	public override void Awake()
     {
@@ -148,6 +168,8 @@ public class Ship : WandererBehavior
         _captureTime = CaptureTime;
 
         GameLord.Instance.OnReloadStage += OnReloadStage;
+
+		InitializeShip();
     }
 
     private void OnDestroy()
@@ -330,7 +352,9 @@ public class Ship : WandererBehavior
         StartCoroutine(WaitForExplosion());
         _circleImage.enabled = false;
 
-        GameController.Instance.ShipDestroyed();
+		CleanShipEffects();
+
+		GameController.Instance.ShipDestroyed();
     }
 
     public void DestoryOnWhirlpool(Vector3 whirlpoolPosition)
@@ -343,7 +367,9 @@ public class Ship : WandererBehavior
         StartCoroutine(WaitForSpin(whirlpoolPosition));
         _circleImage.enabled = false;
 
-        GameController.Instance.ShipDestroyed();
+		CleanShipEffects();
+
+		GameController.Instance.ShipDestroyed();
     }
 
     private IEnumerator WaitForSpin(Vector3 whirlpoolPosition)
@@ -394,7 +420,9 @@ public class Ship : WandererBehavior
         }
         _particleSystem.Stop();
 
-        CleanShip();
+		CleanShipEffects();
+
+		CleanShip();
     }
 
     private IEnumerator ArriveToLand()
@@ -435,6 +463,8 @@ public class Ship : WandererBehavior
         _circleImage.gameObject.SetActive(false);
         _circleImage = null;
         gameObject.SetActive(false);
+
+		CleanShipEffects();
 
 		SetEvents(false);
 	}
@@ -709,6 +739,15 @@ public class Ship : WandererBehavior
 
 	#region Methods
 
+	private void InitializeShip()
+	{
+		_layer_obstacle = LayerMask.NameToLayer("Obstacle");
+		_layer_ship = LayerMask.NameToLayer("Ship");
+		_layerMask = 0;
+		_layerMask |= (1 << _layer_obstacle);
+		_layerMask |= (1 << _layer_ship);
+	}
+
 	private void ChangeShipState(ShipState newShipState)
 	{
 		_lastShipState = _currentShipState;
@@ -773,7 +812,8 @@ public class Ship : WandererBehavior
 			case ShipState.SS_WANDER:
 				ProcesShipCapture();
                 ShipMovement();
-				break;
+				ScanForCollision();
+                break;
 			case ShipState.SS_CAPTURED:
 				ProcesShipCapture();
                 ShipMovement();
@@ -828,6 +868,71 @@ public class Ship : WandererBehavior
 			circleGO.SetActive(true);
 			_circleImage = circleGO.GetComponent<Image>();
 			_circleImage.enabled = true;
+		}
+	}
+
+	private void ScanForCollision()
+	{
+		Vector2 boxSize = _boxCollider.size;
+		boxSize.x *= _transform.localScale.x;
+		boxSize.y *= _transform.localScale.y;
+
+		//boxSize.y *= 1.5f;
+		boxSize.x *= 1.8f;
+
+		float angle = this.transform.eulerAngles.z;
+
+		//Gizmos.DrawWireCube(_transform.position, boxSize);
+		float checkDistance = boxSize.y;
+
+		//DebugTools.DrawDebugBox(_transform.position, angle, boxSize);
+		DebugTools.DrawDebugBox(_transform.position + _transform.up * checkDistance, angle, boxSize);
+		RaycastHit2D[] hits = Physics2D.BoxCastAll(_transform.position + _transform.up * checkDistance, boxSize, angle, _transform.up, 0.0f,_layerMask);
+
+		if (hits != null && hits.Length > 1)
+		{
+			RaycastHit2D[] newHits = hits.Where<RaycastHit2D>(x => x.collider.gameObject != this.gameObject) .ToArray<RaycastHit2D>();
+			//bool collidingCourse = false;
+
+
+			int hitCount = newHits.Length;
+
+			//for(int i = 0;i < hitCount;++i)
+			//{
+			//	if(hits[i].collider != null && hits[i].collider.gameObject.layer == _layer_obstacle)
+			//	{
+			//		collidingCourse = true;
+			//		break;
+			//	}
+			//}
+
+			if (hitCount > 0)
+			{
+				Vector2 obstaclePosition = newHits[0].collider.transform.position;
+				Vector2 targetPosition = Vector2.Lerp(_transform.position, obstaclePosition, 0.5f);
+				if (_spawnedAlert == null)
+				{
+					_spawnedAlert = InstanceLord.Instance.GetInstance(InstanceLord.InstanceType.IT_ALERT);
+					_spawnedAlert.SetActive(true);
+				}
+				_spawnedAlert.gameObject.transform.position = targetPosition;
+			}
+
+		} else {
+			if (_spawnedAlert != null)
+			{
+				_spawnedAlert.gameObject.SetActive(false);
+				_spawnedAlert = null;
+			}
+		}
+	}
+
+	private void CleanShipEffects()
+	{
+		if(_spawnedAlert != null)
+		{
+			_spawnedAlert.SetActive(false);
+			_spawnedAlert = null;
 		}
 	}
 

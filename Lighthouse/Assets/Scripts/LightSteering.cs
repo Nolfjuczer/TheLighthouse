@@ -34,6 +34,13 @@ public class LightSteering : MonoBehaviour
 
 	private float _maxRotateSpeed = 540.0f;
 
+	[SerializeField]
+	private Vector2 _debugPosition = Vector2.zero;
+	[SerializeField]
+	private float _debugAngle = 0.0f;
+	[SerializeField]
+	private Vector2 _debugSize = Vector2.one;
+
 	#endregion Variables
 
 	#region Monobehaviour Methods
@@ -92,7 +99,8 @@ public class LightSteering : MonoBehaviour
 	{
 		//InputGetter();
 		LightControll();
-	}
+		TestDraw();
+    }
 
 	#endregion Monobehaviour Methods
 
@@ -226,6 +234,11 @@ public class LightSteering : MonoBehaviour
 	private void OnDirectionSwap(bool active)
 	{
 		_invertSteering = active;
+	}
+
+	public void TestDraw()
+	{
+		DebugTools.DrawDebugBox(_debugPosition, _debugAngle, _debugSize);
 	}
 
 	#endregion Methods
