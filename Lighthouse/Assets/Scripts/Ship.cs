@@ -52,9 +52,10 @@ public class Ship : WandererBehavior
 
 	private int _layer_obstacle = 0;
 	private int _layer_ship = 0;
-	private int _layerMask =0;
+	private int _layer_mine = 0;
+	private int _layerMask = 0;
 
-	private GameObject _spawnedAlert = null;
+	private Alert _alert = null;
 
     public bool Captured
     {
@@ -196,6 +197,8 @@ public class Ship : WandererBehavior
 		_trailRenderer.Clear();
 		_trailRenderer.enabled = true;
 
+		_captureProgres = 0.0f;
+
 		GameObject circleGO = InstanceLord.Instance.GetInstance(InstanceLord.InstanceType.IT_CIRCLE);
 		if (circleGO == null)
 		{
@@ -241,7 +244,7 @@ public class Ship : WandererBehavior
 	public void OnTriggerEnter2D(Collider2D col2D)
 	{
 		if (!_renderer.isVisible) return;
-		if (GameController.Instance.GameState == EGameState.End) return;
+		if (GameController.Instance.GameState != EGameState.InGame) return;
 
 		//if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && _captureTimer < CaptureTime && !_gotToPort)
 		//{
@@ -280,7 +283,7 @@ public class Ship : WandererBehavior
 	public void OnTriggerExit2D(Collider2D col2D)
 	{
 		if (!_renderer.isVisible) return;
-		if (GameController.Instance.GameState == EGameState.End) return;
+		if (GameController.Instance.GameState != EGameState.InGame) return;
 
 		//if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && !_gotToPort)
 		//{
@@ -394,11 +397,19 @@ public class Ship : WandererBehavior
                 }
                 StartCoroutine(WaitForExplosion());
             }
+			float deltaTime = 0.0f;
+			if (GameController.Instance.GameState == EGameState.PostGame)
+			{
+				deltaTime = Time.unscaledDeltaTime;
+			} else {
+				deltaTime = Time.deltaTime;
+			}
+
             transform.position = Vector3.Lerp(whirlpoolPosition, startPos, Mathf.Clamp01(landTimer / 2f - 1f));
             transform.localScale = Vector3.Lerp(Vector3.zero, _baseScale, landTimer / 3f);
-            transform.Rotate(Vector3.forward, 250f * Time.deltaTime);
-            landTimer -= Time.deltaTime;
-            landTimer = Mathf.Clamp(landTimer, 0f, float.MaxValue);
+            transform.Rotate(Vector3.forward, 250f * deltaTime);
+			landTimer -= deltaTime;			
+			landTimer = Mathf.Clamp(landTimer, 0f, float.MaxValue);
             yield return null;
         }
 
@@ -414,7 +425,12 @@ public class Ship : WandererBehavior
                 _renderer.enabled = false;
                 _died = true;
             }
-            landTimer -= Time.deltaTime;
+			if (GameController.Instance.GameState == EGameState.PostGame)
+			{
+				landTimer -= Time.unscaledDeltaTime;
+			} else {
+				landTimer -= Time.deltaTime;
+			}
             landTimer = Mathf.Clamp(landTimer, 0f, float.MaxValue);
             yield return null;
         }
@@ -439,8 +455,10 @@ public class Ship : WandererBehavior
             yield return null;
         }
 
-        if(GameController.Instance.GameState != EGameState.End)
-            GameController.Instance.ShipCollected(ShipType);
+		if (GameController.Instance.GameState == EGameState.InGame)
+		{
+			GameController.Instance.ShipCollected(ShipType);
+		}
 
         CleanShip();
     }
@@ -743,9 +761,11 @@ public class Ship : WandererBehavior
 	{
 		_layer_obstacle = LayerMask.NameToLayer("Obstacle");
 		_layer_ship = LayerMask.NameToLayer("Ship");
+		_layer_mine = LayerMask.NameToLayer("Mine");
 		_layerMask = 0;
 		_layerMask |= (1 << _layer_obstacle);
 		_layerMask |= (1 << _layer_ship);
+		_layerMask |= (1 << _layerMask);
 	}
 
 	private void ChangeShipState(ShipState newShipState)
@@ -877,8 +897,8 @@ public class Ship : WandererBehavior
 		boxSize.x *= _transform.localScale.x;
 		boxSize.y *= _transform.localScale.y;
 
-		//boxSize.y *= 1.5f;
-		boxSize.x *= 1.8f;
+		boxSize.y *= 1.0f;
+		boxSize.x *= 2.5f;
 
 		float angle = this.transform.eulerAngles.z;
 
@@ -887,7 +907,8 @@ public class Ship : WandererBehavior
 
 		//DebugTools.DrawDebugBox(_transform.position, angle, boxSize);
 		DebugTools.DrawDebugBox(_transform.position + _transform.up * checkDistance, angle, boxSize);
-		RaycastHit2D[] hits = Physics2D.BoxCastAll(_transform.position + _transform.up * checkDistance, boxSize, angle, _transform.up, 0.0f,_layerMask);
+		DebugTools.DrawDebugBox(_transform.position + _transform.up * (checkDistance + _speed * _speedMultiplier), angle, boxSize);
+		RaycastHit2D[] hits = Physics2D.BoxCastAll(_transform.position + _transform.up * checkDistance, boxSize, angle, _transform.up, _speed * _speedMultiplier,_layerMask);
 
 		if (hits != null && hits.Length > 1)
 		{
@@ -910,29 +931,34 @@ public class Ship : WandererBehavior
 			{
 				Vector2 obstaclePosition = newHits[0].collider.transform.position;
 				Vector2 targetPosition = Vector2.Lerp(_transform.position, obstaclePosition, 0.5f);
-				if (_spawnedAlert == null)
+				if (_alert == null)
 				{
-					_spawnedAlert = InstanceLord.Instance.GetInstance(InstanceLord.InstanceType.IT_ALERT);
-					_spawnedAlert.SetActive(true);
+					GameObject alertGO = InstanceLord.Instance.GetInstance(InstanceLord.InstanceType.IT_ALERT);
+					if(alertGO != null)
+					{
+						alertGO.SetActive(true);
+						_alert = alertGO.GetComponent<Alert>();
+					}
 				}
-				_spawnedAlert.gameObject.transform.position = targetPosition;
+				if (_alert != null)
+				{
+					_alert.UpdateAlert(targetPosition);
+				}
 			}
 
 		} else {
-			if (_spawnedAlert != null)
+			if (_alert != null)
 			{
-				_spawnedAlert.gameObject.SetActive(false);
-				_spawnedAlert = null;
+				_alert = null;
 			}
 		}
 	}
 
 	private void CleanShipEffects()
 	{
-		if(_spawnedAlert != null)
+		if(_alert != null)
 		{
-			_spawnedAlert.SetActive(false);
-			_spawnedAlert = null;
+			_alert = null;
 		}
 	}
 

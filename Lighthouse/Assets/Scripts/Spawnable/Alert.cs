@@ -21,6 +21,10 @@ public class Alert : MonoBehaviour
 	private float _alertTimer = 0.0f;
 	private float _alertInterval = 1.0f;
 
+	private float _upTimeTimer = 0.0f;
+	private float _timeToHideExclamation = 0.1f;
+	private float _timeToDisable = 1.0f;
+
 	#endregion Variables
 
 	#region Monobehaviour Methods
@@ -40,6 +44,7 @@ public class Alert : MonoBehaviour
 
 	private void ResetAlert()
 	{
+		_spriteTransform.gameObject.SetActive(true);
 		_spriteTimer = 0.0f;
 		_alertTimer = 0.0f;
 	}
@@ -57,7 +62,23 @@ public class Alert : MonoBehaviour
 			_alertTimer = 0.0f;
 			//sound alert
 		}
+
+		_upTimeTimer += deltaTime;
+		if(_upTimeTimer > _timeToHideExclamation)
+		{
+			_spriteTransform.gameObject.SetActive(false);
+        }
+		if(_upTimeTimer > _timeToDisable)
+		{
+			this.gameObject.SetActive(false);
+		}
 	}
+
+	public void UpdateAlert(Vector3 newPosition)
+	{
+		_upTimeTimer = 0.0f;
+		_transform.position = newPosition;
+    }
 
 	#endregion Methods
 }

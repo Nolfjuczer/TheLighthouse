@@ -23,7 +23,7 @@ public class DebugTools
 		Debug.DrawLine(corners[2], corners[3]);
 		Debug.DrawLine(corners[3], corners[0]);
 
-		Debug.DrawLine(position, position + up, Color.red);
-		Debug.DrawLine(position, position + right, Color.blue);
+		Debug.DrawLine(position, position + up * size.y * 0.5f, Color.red);
+		Debug.DrawLine(position, position + right * size.x * 0.5f, Color.blue);
 	}
 }

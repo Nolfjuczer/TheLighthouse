@@ -21,7 +21,7 @@ public class LivesController : MonoBehaviour
 		public LifeState state;
 
 		private float _timer;
-		private const float flightLength = 0.75f;
+		private const float flightLength = 1.5f;
 
 		private const float regularSize = 1.0f;
 		private const float flightSize = 2.0f;
@@ -29,7 +29,6 @@ public class LivesController : MonoBehaviour
 
 		private static AnimationCurve flightCurve = AnimationCurve.EaseInOut(0.0f,0.0f,1.0f,1.0f);
 
-		[System.NonSerialized]
 		[HideInInspector]
 		public Vector2 startPosition;
 		[System.NonSerialized]
@@ -43,6 +42,8 @@ public class LivesController : MonoBehaviour
 			{
 				case LifeState.LS_ON:
 					lifeGO.SetActive(true);
+					transform.anchoredPosition = startPosition;
+					transform.localScale = Vector3.one * regularSize;
 					break;
 				case LifeState.LS_FLIGHT:
 					_timer = 0.0f;
@@ -82,9 +83,7 @@ public class LivesController : MonoBehaviour
 		}
 		public void ResetLife()
 		{
-			lifeGO.SetActive(true);
-			transform.anchoredPosition = startPosition;
-			transform.localScale = Vector3.one * regularSize;
+			ChangeLifeState(LifeState.LS_ON);
 		}
 		public void SendLife(Vector2 destination)
 		{
@@ -97,6 +96,8 @@ public class LivesController : MonoBehaviour
 
 	[SerializeField]
 	private LifeInfo[] _lifeInfos = null;
+
+	private bool _wasControllerInited = false;
 
 	private int _currentLiveStatus = 0;
 
@@ -127,11 +128,8 @@ public class LivesController : MonoBehaviour
 
 	void Awake()
 	{
-		for(int i = 0;i < maxLifeCount;++i)
-		{
-			_lifeInfos[i].InitLife();
-		}
-	}
+		InitController();
+    }
 
 	void Update()
 	{
@@ -142,8 +140,21 @@ public class LivesController : MonoBehaviour
 
 	#region Methods
 
+	public void InitController()
+	{
+		_wasControllerInited = true;
+		for (int i = 0; i < maxLifeCount; ++i)
+		{
+			_lifeInfos[i].InitLife();
+		}
+	}
+
 	public void ResetLifes()
 	{
+		if(!_wasControllerInited)
+		{
+			InitController();
+		}
 		_currentLiveStatus = maxLifeCount;
 		for(int i = 0;i < maxLifeCount;++i)
 		{
@@ -153,6 +164,10 @@ public class LivesController : MonoBehaviour
 
 	public void Damage(bool sendHelp,Vector3 worldPosition = new Vector3())
 	{
+		if (!_wasControllerInited)
+		{
+			InitController();
+		}
 		if (_currentLiveStatus > 0)
 		{
 			--_currentLiveStatus;
@@ -168,7 +183,14 @@ public class LivesController : MonoBehaviour
 
 	public void UpdateLifes()
 	{
-		float deltaTime = Time.deltaTime;
+		float deltaTime = 0.0f;
+		GameController instance = GameController.Instance;
+        if (instance != null && instance.GameState == EGameState.PostGame)
+		{
+			deltaTime = Time.unscaledDeltaTime;
+		} else {
+			deltaTime = Time.deltaTime;
+		}
 		for(int i = 0;i < maxLifeCount;++i)
 		{
 			_lifeInfos[i].UpdateLife(deltaTime);

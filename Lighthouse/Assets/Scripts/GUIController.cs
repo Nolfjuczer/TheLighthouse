@@ -15,7 +15,8 @@ public sealed class GUIController : Singleton<GUIController>
 		HS_WIN = 2,
 		HS_LOST = 3,
 
-		HS_COUNT
+		HS_COUNT,
+		HS_NONE
 	}
 
 	[System.Serializable]
@@ -292,21 +293,21 @@ public sealed class GUIController : Singleton<GUIController>
 
 	private void OnHudStateChanged(HUDState newState)
 	{
-		switch(newState)
-		{
-			case HUDState.HS_GAME:
-				Time.timeScale = 1.0f;
-				break;
-			case HUDState.HS_PAUSE:
-				Time.timeScale = 0.0f;
-				break;
-			case HUDState.HS_WIN:
-				Time.timeScale = 0.0f;
-				break;
-			case HUDState.HS_LOST:
-				Time.timeScale = 0.0f;
-				break;
-		}
+		//switch(newState)
+		//{
+		//	case HUDState.HS_GAME:
+		//		Time.timeScale = 1.0f;
+		//		break;
+		//	case HUDState.HS_PAUSE:
+		//		Time.timeScale = 0.0f;
+		//		break;
+		//	case HUDState.HS_WIN:
+		//		Time.timeScale = 0.0f;
+		//		break;
+		//	case HUDState.HS_LOST:
+		//		Time.timeScale = 0.0f;
+		//		break;
+		//}
 	}
 
 	public void UpdatePowerUpIcon(PowerUpType type, float progres)

@@ -1,56 +1,106 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Runtime.Remoting.Messaging;
 using Random = UnityEngine.Random;
 
 public class ShipSpawner : MonoBehaviour
 {
-    public Transform RightRestriction;
+	#region Variables
+
+	public Transform RightRestriction;
     public bool Delayed;
     public bool Top;
 
+	private const int cycleSpawnCount = 3;
+	private const float spawnInterval = 5.0f;
+	private const float cycleInterval = 15.0f;
+
+	private float _timer = 0.0f;
     private int _spawnedThisCycle = 0;
 
-    public void OnEnable()
-    {
-        StartCoroutine(SpawnnCycle());
-    }
+	#endregion Variables
 
-    public IEnumerator SpawnnCycle()
-    {
-        Vector3 spawnPosition;
-        Quaternion spawnQuaternion;
-        GameObject ship;
-        while (true)
-        {
-            if (Delayed)
-            {
-                Delayed = false;
-                yield return new WaitForSeconds(1.5f);
-            }
-            if(GameController.Instance.GameState == EGameState.End) yield break;
-            ship = GameController.Instance.GetShip();
+	#region Monobehaviour Methods
 
-            spawnPosition = new Vector3(spawnPosition.x = Random.Range(Mathf.CeilToInt(transform.position.x), Mathf.FloorToInt(RightRestriction.position.x)), transform.position.y, 0f);
-            spawnQuaternion = Quaternion.LookRotation(Vector3.forward, GameController.Instance.IslandTransfrom.position - spawnPosition);
+	void OnEnable()
+	{
+		if(Delayed)
+		{
+			_timer = 1.5f;
+		} else {
+			_timer = 0.0f;
+		}
+	}
 
-            ship.transform.position = spawnPosition;
-            ship.transform.rotation = spawnQuaternion;
-            ship.gameObject.SetActive(true);
-            ++_spawnedThisCycle;
-            yield return new  WaitForSeconds(5f);
+	void Update()
+	{
+		GameController instance = GameController.Instance;
+		if(instance != null && instance.GameState == EGameState.InGame)
+		{
+			ProcessSpawning();
+		}
+	}
 
-            if (_spawnedThisCycle >= 3)
-            {
-                yield return new WaitForSeconds(15f);
-                _spawnedThisCycle = 0;
-            }
-        }
-    }
+	#endregion Monobehaviour Methods
 
-    public void OnDisable()
-    {
-        StopAllCoroutines();
-    }
+	#region Methods
+
+	//public IEnumerator SpawnnCycle()
+    //{
+	//
+    //    while (true)
+    //    {
+    //        if (Delayed)
+    //        {
+    //            Delayed = false;
+    //            yield return new WaitForSeconds(1.5f);
+    //        }
+	//		if (GameController.Instance.GameState != EGameState.InGame)
+	//		{
+	//			yield break;
+	//		}
+	//		SpawnShip();
+	//		 ++_spawnedThisCycle;
+    //        yield return new  WaitForSeconds(5f);
+	//
+    //        if (_spawnedThisCycle >= 3)
+    //        {
+    //            yield return new WaitForSeconds(15f);
+    //            _spawnedThisCycle = 0;
+    //        }
+    //    }
+    //}
+
+	private void ProcessSpawning()
+	{
+		float deltaTime = Time.deltaTime;
+		_timer -= deltaTime;
+		if(_timer <  0.0f)
+		{
+			SpawnShip();
+			if(_spawnedThisCycle < cycleSpawnCount)
+			{
+				_timer += spawnInterval;
+			} else {
+				_timer += cycleInterval;
+				_spawnedThisCycle = 0;
+			}
+		}
+	}
+
+	private void SpawnShip()
+	{
+		GameObject ship = GameController.Instance.GetShip();
+
+		Vector3 spawnPosition = new Vector3(spawnPosition.x = Random.Range(Mathf.CeilToInt(transform.position.x), Mathf.FloorToInt(RightRestriction.position.x)), transform.position.y, 0f);
+		Quaternion spawnQuaternion = Quaternion.LookRotation(Vector3.forward, GameController.Instance.IslandTransfrom.position - spawnPosition);
+
+		ship.transform.position = spawnPosition;
+		ship.transform.rotation = spawnQuaternion;
+		ship.gameObject.SetActive(true);
+
+		++_spawnedThisCycle;
+	}
+
+	#endregion Methods
 }

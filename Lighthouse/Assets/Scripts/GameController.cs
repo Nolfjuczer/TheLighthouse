@@ -2,11 +2,16 @@
 using UnityEngine.UI;
 using System.Collections.Generic;
 
-public enum EGameState
+public enum EGameState : int
 {
-    InGame,
-    Paused,
-    End
+	PreGame = 0,
+    InGame = 1,
+	PostGame = 2,
+    Paused = 3,
+    Win = 4,
+	Lost = 5,
+
+	None
 }
 
 [System.Serializable]
@@ -89,24 +94,18 @@ public class ShipCounterType
 
 public class GameController : Singleton<GameController>
 {
-    public EGameState GameState
+	#region Variables
+	public EGameState GameState
     {
         get { return _gameState; }
         set
         {
-            switch (value)
-            {
-                case EGameState.InGame:
-                    Time.timeScale = 1f;
-                    break;
-                case EGameState.Paused:
-                    Time.timeScale = 0.000001f;
-                    break;
-            }
             _gameState = value;
+			OnGameStateChanged();
         }
     }
-    private EGameState _gameState = EGameState.InGame;
+    private EGameState _gameState = EGameState.PreGame;
+	private EGameState _pendingGameState = EGameState.None;
 
     public AStar.Grid MainGrid;
     public Transform IslandTransfrom;
@@ -114,6 +113,14 @@ public class GameController : Singleton<GameController>
     public Camera MainCamera;
 
 	private Vector2 _referenceResolution = Vector2.zero;
+
+	private float _stateTimer = 0.0f;
+	private const float stateLength_preGame = 0.5f;
+	private const float stateLength_postGame = 1.5f;
+
+	#endregion Variables
+
+	#region Monobehaviour Methods
 
 	protected override void Awake()
 	{
@@ -130,20 +137,88 @@ public class GameController : Singleton<GameController>
 		}
 	}
 
-    protected void OnEnable()
+    void OnEnable()
     {
-        _gameState = EGameState.InGame;
-        _hp = 3;
-		GUIController.Instance.LivesController.ResetLifes();
-        _money = 0;
-        _currentShipCounterState = new ShipCounterType();
-        MainGrid.RegenerateGrid();
+		ResetGameController();
     }
 
     public void Update()
     {
+		ProcessGameState();
         OnBackButton();
     }
+
+	#endregion Monobehaviour Methods
+
+	#region Methods
+
+	private void OnGameStateChanged()
+	{
+		_stateTimer = 0.0f;
+		switch (_gameState)
+		{
+			case EGameState.PreGame:
+				Time.timeScale = 0.0f;
+				break;
+			case EGameState.InGame:
+				Time.timeScale = 1.0f;
+				break;
+			case EGameState.PostGame:
+				Time.timeScale = 0.0f;
+				break;
+			case EGameState.Paused:
+				//Time.timeScale = 0.000001f;
+				Time.timeScale = 0.0f;
+				break;
+			case EGameState.Win:
+				Time.timeScale = 0.0f;
+				break;
+			case EGameState.Lost:
+				Time.timeScale = 0.0f;
+				break;
+		}
+	}
+
+	private void ProcessGameState()
+	{
+		_stateTimer += Time.unscaledDeltaTime;
+		switch (GameState)
+		{
+			case EGameState.PreGame:
+				if(_stateTimer > stateLength_preGame)
+				{
+					GameState = EGameState.InGame;
+				}
+				break;
+			case EGameState.InGame:
+				break;
+			case EGameState.PostGame:
+				if (_stateTimer > stateLength_postGame)
+				{
+					GameState = _pendingGameState;
+				}
+				break;
+			case EGameState.Paused:
+				break;
+			case EGameState.Win:
+				GUIController.Instance.OnWinGame(_money, _currentShipCounterState, MissionShipCounterState);
+				break;
+			case EGameState.Lost:
+				GUIController.Instance.OnLoseGame(_money, _currentShipCounterState, MissionShipCounterState);
+				break;
+		}
+	}
+
+	private void ResetGameController()
+	{
+		_gameState = EGameState.PreGame;
+		_hp = 3;
+		GUIController.Instance.LivesController.InitController();
+        GUIController.Instance.LivesController.ResetLifes();
+		_money = 0;
+		_currentShipCounterState = new ShipCounterType();
+		MainGrid.RegenerateGrid();
+	}
 
     #region TotalGameControl
 
@@ -163,11 +238,11 @@ public class GameController : Singleton<GameController>
         }
     }
 
-    #endregion
+	#endregion TotalGameControl
 
-    #region InGame
+	#region InGame
 
-    private ShipCounterType _currentShipCounterState;
+	private ShipCounterType _currentShipCounterState;
     public ShipCounterType MissionShipCounterState = new ShipCounterType();
     private int _hp;
 
@@ -179,30 +254,36 @@ public class GameController : Singleton<GameController>
 
     public void ShipCollected(ShipTypeEnum shipType)
     {
-        _money += 10;
-        _currentShipCounterState.IncrementCounter(shipType);
-        if (_currentShipCounterState.CompareCounter(MissionShipCounterState))
-        {
-            _gameState = EGameState.End;
-            GUIController.Instance.OnWinGame(_money, _currentShipCounterState, MissionShipCounterState);
-        }
+		if (GameState == EGameState.InGame)
+		{
+			_money += 10;
+			_currentShipCounterState.IncrementCounter(shipType);
+			if (_currentShipCounterState.CompareCounter(MissionShipCounterState))
+			{
+				GameState = EGameState.PostGame;
+				_pendingGameState = EGameState.Win;
+			}
+		}
     }
 
     public void ShipDestroyed(bool sendHelp, Vector3 worldPosition = new Vector3())
     {
-        _money -= 10;
+        //_money -= 10;
         DecreaseHp(sendHelp, worldPosition);
     }
 
     private void DecreaseHp(bool sendHelp, Vector3 worldPosition = new Vector3())
     {
-        _hp -= 1;
-		GUIController.Instance.LivesController.Damage(sendHelp, worldPosition);
-        if (_hp == 0)
-        {
-            _gameState = EGameState.End;
-            GUIController.Instance.OnLoseGame(_money, _currentShipCounterState, MissionShipCounterState);
-        }
+		if (GameState == EGameState.InGame)
+		{
+			_hp -= 1;
+			GUIController.Instance.LivesController.Damage(sendHelp, worldPosition);
+			if (_hp == 0)
+			{
+				GameState = EGameState.PostGame;
+				_pendingGameState = EGameState.Lost;
+			}
+		}
     }
 
     public void SetCirclePosition(Image img, Vector3 shipPosition)
@@ -272,6 +353,8 @@ public FlareActive GetFlare(Vector3 spawnPosition)
         }
         return ship;
     }
-#endregion
+	#endregion InGame
+
+	#endregion Methods
 }
 
