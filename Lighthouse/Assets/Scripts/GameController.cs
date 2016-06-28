@@ -115,8 +115,8 @@ public class GameController : Singleton<GameController>
 	private Vector2 _referenceResolution = Vector2.zero;
 
 	private float _stateTimer = 0.0f;
-	private const float stateLength_preGame = 0.5f;
-	private const float stateLength_postGame = 1.5f;
+	private const float stateLength_preGame = 1.5f;
+	private const float stateLength_postGame = 3.0f;
 
 	#endregion Variables
 
@@ -213,8 +213,6 @@ public class GameController : Singleton<GameController>
 	{
 		_gameState = EGameState.PreGame;
 		_hp = 3;
-		GUIController.Instance.LivesController.InitController();
-        GUIController.Instance.LivesController.ResetLifes();
 		_money = 0;
 		_currentShipCounterState = new ShipCounterType();
 		MainGrid.RegenerateGrid();
@@ -243,6 +241,7 @@ public class GameController : Singleton<GameController>
 	#region InGame
 
 	private ShipCounterType _currentShipCounterState;
+	public ShipCounterType CurrentShipCounterState {  get { return _currentShipCounterState; } }
     public ShipCounterType MissionShipCounterState = new ShipCounterType();
     private int _hp;
 

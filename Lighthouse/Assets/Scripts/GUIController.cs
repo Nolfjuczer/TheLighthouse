@@ -50,8 +50,12 @@ public sealed class GUIController : Singleton<GUIController>
 	private LivesController _livesController = null;
 	public LivesController LivesController { get { return _livesController; } }
 
-	public EndGameGUI WinStats;
-	public EndGameGUI LoseStats;
+	[SerializeField]
+	private EndGameGUI _pauseStats = null;
+	[SerializeField]
+	private EndGameGUI WinStats;
+	[SerializeField]
+	private EndGameGUI LoseStats;
 
 	#endregion Score GUI
 
@@ -192,6 +196,11 @@ public sealed class GUIController : Singleton<GUIController>
 		GameLord.Instance.LoadScene(GameLord.Instance.CurrentSceneName);
     }
 
+	public void OnNextClick()
+	{
+		//TODO
+	}
+
     public void OnMenuClick()
     {
         GameController.Instance.GameState = EGameState.InGame;
@@ -293,21 +302,26 @@ public sealed class GUIController : Singleton<GUIController>
 
 	private void OnHudStateChanged(HUDState newState)
 	{
-		//switch(newState)
-		//{
-		//	case HUDState.HS_GAME:
-		//		Time.timeScale = 1.0f;
-		//		break;
-		//	case HUDState.HS_PAUSE:
-		//		Time.timeScale = 0.0f;
-		//		break;
-		//	case HUDState.HS_WIN:
-		//		Time.timeScale = 0.0f;
-		//		break;
-		//	case HUDState.HS_LOST:
-		//		Time.timeScale = 0.0f;
-		//		break;
-		//}
+		switch (newState)
+		{
+			case HUDState.HS_GAME:
+				ResetHudState();
+				LivesController.ResetLifes();
+				break;
+			case HUDState.HS_PAUSE:
+				{
+					GameController gameControllerInstace = GameController.Instance;
+					if(gameControllerInstace != null)
+					{
+						_pauseStats.UpdateScore(gameControllerInstace.Money,gameControllerInstace.CurrentShipCounterState,gameControllerInstace.MissionShipCounterState);
+					}
+				}
+				break;
+			case HUDState.HS_WIN:
+				break;
+			case HUDState.HS_LOST:
+				break;
+		}
 	}
 
 	public void UpdatePowerUpIcon(PowerUpType type, float progres)

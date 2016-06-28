@@ -222,9 +222,10 @@ public class ActiveController : Singleton<ActiveController>
 
 	public void ProcessActives()
 	{
-		if(GameLord.Instance.CurrentGameState == GameLord.GameState.GS_GAME && CurrentActive != ActiveSkillsEnum.NONE)
+		if(GameController.Instance.GameState == EGameState.InGame)
 		{
-			if(!InputManager.Instance.PreviousFrameTouch && InputManager.Instance.ThisFrameTouch)
+			UpdateActives();
+            if (CurrentActive != ActiveSkillsEnum.NONE && !InputManager.Instance.PreviousFrameTouch && InputManager.Instance.ThisFrameTouch)
 			{
 				Vector3 worldTouchPoint = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.TouchPosition);
 				PlaceActive(CurrentActive, worldTouchPoint);

@@ -425,13 +425,17 @@ public class Ship : WandererBehavior
                 _renderer.enabled = false;
                 _died = true;
             }
+			float deltaTime = 0.0f;
 			if (GameController.Instance.GameState == EGameState.PostGame)
 			{
-				landTimer -= Time.unscaledDeltaTime;
+				deltaTime = Time.unscaledDeltaTime;
+				_particleSystem.Simulate(deltaTime, true, false);
 			} else {
-				landTimer -= Time.deltaTime;
+				deltaTime = Time.deltaTime;
 			}
-            landTimer = Mathf.Clamp(landTimer, 0f, float.MaxValue);
+			landTimer -= deltaTime;
+
+			landTimer = Mathf.Clamp(landTimer, 0f, float.MaxValue);
             yield return null;
         }
         _particleSystem.Stop();
@@ -839,6 +843,7 @@ public class Ship : WandererBehavior
                 ShipMovement();
 				break;
 			case ShipState.SS_ARRIVED:
+				ShipMovement();
 				break;
 			case ShipState.SS_DEAD:
 				break;
@@ -848,10 +853,13 @@ public class Ship : WandererBehavior
 	private void ProcesShipCapture()
 	{
 		float deltaTime = Time.deltaTime;
-		_captureCoolingTimer += deltaTime;
-		if(_captureCoolingTimer > _captureCoolingLength)
+		if (!_frozen)
 		{
-			_captureProgres -= deltaTime * _captureToCoolTimeRatio;
+			_captureCoolingTimer += deltaTime;
+			if (_captureCoolingTimer > _captureCoolingLength)
+			{
+				_captureProgres -= deltaTime * _captureToCoolTimeRatio;
+			}
 		}
 
 		_captureProgres = Mathf.Clamp(_captureProgres, 0.0f, CaptureTime);

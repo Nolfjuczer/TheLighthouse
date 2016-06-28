@@ -116,6 +116,14 @@ public class GameLord : MonoBehaviour
 			case GameState.GS_GAME:
 				_guiLord.ChangeGUIState(GUILord.GUIState.GUIS_GAME);
 				//ActiveController.Instance.ResetActiveController();
+				{
+					GameController gameControllerInstance = GameController.Instance;
+					if(gameControllerInstance != null)
+					{
+						gameControllerInstance.GameState = EGameState.PreGame;
+					}
+					GUIController.Instance.ChangeHudState(GUIController.HUDState.HS_GAME);
+				}
 				break;
 		}
 	}
