@@ -354,7 +354,7 @@ public class Ship : WandererBehavior
 
 		CleanShipEffects();
 
-		GameController.Instance.ShipDestroyed();
+		GameController.Instance.ShipDestroyed(true,_transform.position);
     }
 
     public void DestoryOnWhirlpool(Vector3 whirlpoolPosition)
@@ -369,7 +369,7 @@ public class Ship : WandererBehavior
 
 		CleanShipEffects();
 
-		GameController.Instance.ShipDestroyed();
+		GameController.Instance.ShipDestroyed(true, _transform.position);
     }
 
     private IEnumerator WaitForSpin(Vector3 whirlpoolPosition)

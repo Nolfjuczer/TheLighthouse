@@ -134,6 +134,7 @@ public class GameController : Singleton<GameController>
     {
         _gameState = EGameState.InGame;
         _hp = 3;
+		GUIController.Instance.LivesController.ResetLifes();
         _money = 0;
         _currentShipCounterState = new ShipCounterType();
         MainGrid.RegenerateGrid();
@@ -187,19 +188,16 @@ public class GameController : Singleton<GameController>
         }
     }
 
-    public void ShipDestroyed()
+    public void ShipDestroyed(bool sendHelp, Vector3 worldPosition = new Vector3())
     {
         _money -= 10;
-        DecreaseHp();
+        DecreaseHp(sendHelp, worldPosition);
     }
 
-    private void DecreaseHp()
+    private void DecreaseHp(bool sendHelp, Vector3 worldPosition = new Vector3())
     {
         _hp -= 1;
-        for(int i = 0; i < 3; ++i)
-        {
-            GUIController.Instance.Lives[i].enabled = i < _hp;
-        }
+		GUIController.Instance.LivesController.Damage(sendHelp, worldPosition);
         if (_hp == 0)
         {
             _gameState = EGameState.End;
@@ -215,6 +213,15 @@ public class GameController : Singleton<GameController>
             ((ViewportPosition.y * _referenceResolution.y) - (_referenceResolution.y * 0.5f)));
             img.rectTransform.anchoredPosition = WorldObject_ScreenPosition;
     }
+
+	public Vector2 WorldToScreenPosition(Vector3 worldPosition)
+	{
+		Vector2 ViewportPosition = MainCamera.WorldToViewportPoint(worldPosition);
+		Vector2 WorldObject_ScreenPosition = new Vector2(
+			((ViewportPosition.x * _referenceResolution.x) - (_referenceResolution.x * 0.5f)),
+			((ViewportPosition.y * _referenceResolution.y) - (_referenceResolution.y * 0.5f)));
+		return WorldObject_ScreenPosition;
+	}
 
 
 public FlareActive GetFlare(Vector3 spawnPosition)

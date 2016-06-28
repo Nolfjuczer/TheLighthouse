@@ -44,7 +44,10 @@ public sealed class GUIController : Singleton<GUIController>
 
 	[SerializeField]
 	private Text Score;
-	public Image[] Lives;
+
+	[SerializeField]
+	private LivesController _livesController = null;
+	public LivesController LivesController { get { return _livesController; } }
 
 	public EndGameGUI WinStats;
 	public EndGameGUI LoseStats;
@@ -129,7 +132,11 @@ public sealed class GUIController : Singleton<GUIController>
 	void OnEnable()
 	{
 		ResetHudState();
-	    for (int i = 0; i < Lives.Length; ++i) Lives[i].enabled = true;
+		if(_livesController != null)
+		{
+			_livesController.ResetLifes();
+		}
+	    //for (int i = 0; i < Lives.Length; ++i) Lives[i].enabled = true;
 	}
 
 	public void Update()
