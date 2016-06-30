@@ -97,8 +97,8 @@ public class LightSteering : MonoBehaviour
 
 	void Update()
 	{
-		//InputGetter();
-		LightControll();
+		InputGetter();
+		//LightControll();
 		TestDraw();
     }
 
@@ -133,63 +133,63 @@ public class LightSteering : MonoBehaviour
     //{
     //    transform.localScale = _largeScale;
     //}
-	//
+    //
     //public void LightEnlargerEnd()
     //{
     //    transform.localScale = _normalScale;
     //}
-	//
+    //
     //public void InvertSteeringBegin()
     //{
     //    _invertSteering = true;
     //}
-	//
+    //
     //public void InvertSteeringEnd()
     //{
     //    _invertSteering = false;
     //}
 
-    //private void InputGetter()
-    //{
-    //    if(_activeOn) return;
-    //    if (InputManager.Instance.ThisFrameTouch)
-    //    {
-    //        if (_targeted && InputManager.Instance.PreviousFrameTouch)
-    //        {
-    //            Vector2 prev = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.PreviousTouchPosition);
-    //            Vector2 cur = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.TouchPosition);
-	//
-    //            float angle = Vector2.Angle(prev, cur);
-	//
-    //            Vector3 cross = Vector3.Cross(prev,cur);
-    //            angle = cross.z > 0 ? angle : 360f - angle ;
-	//
-    //            gameObject.transform.Rotate(Vector3.forward, _invertSteering ? -angle : angle);
-    //        }
-    //        else
-    //        {
-    //            Ray ray = GameController.Instance.MainCamera.ScreenPointToRay(InputManager.Instance.TouchPosition);
-    //            RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
-    //            if (hit.collider != null)
-    //            {
-    //                if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Light"))
-    //                {
-    //                    _targeted = true;
-    //                }
-    //            }
-    //            else
-    //            {
-    //                _targeted = false;
-    //            }
-    //        }
-    //    }
-    //    else
-    //    {
-    //        _targeted = false;
-    //    }
-    //}
+    private void InputGetter()
+    {
+        if (_activeOn) return;
+        if (InputManager.Instance.ThisFrameTouch)
+        {
+            if (_targeted && InputManager.Instance.PreviousFrameTouch)
+            {
+                Vector2 prev = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.PreviousTouchPosition);
+                Vector2 cur = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.TouchPosition);
 
-	private void LightControll()
+                float angle = Vector2.Angle(prev, cur);
+
+                Vector3 cross = Vector3.Cross(prev, cur);
+                angle = cross.z > 0 ? angle : 360f - angle;
+
+                gameObject.transform.Rotate(Vector3.forward, _invertSteering ? -angle : angle);
+            }
+            else
+            {
+                Ray ray = GameController.Instance.MainCamera.ScreenPointToRay(InputManager.Instance.TouchPosition);
+                RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction);
+                if (hit.collider != null)
+                {
+                    if (hit.collider.gameObject.layer == LayerMask.NameToLayer("Mine"))
+                    {
+                        _targeted = false;
+                    }
+                }
+                else
+                {
+                    _targeted = true;
+                }
+            }
+        }
+        else
+        {
+            _targeted = false;
+        }
+    }
+
+    private void LightControll()
 	{
 		if(InputManager.Instance.ThisFrameTouch && !ActiveController.Instance.AnySkillActive)
 		{
