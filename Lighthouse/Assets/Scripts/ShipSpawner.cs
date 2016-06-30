@@ -5,9 +5,17 @@ using Random = UnityEngine.Random;
 
 public class ShipSpawner : MonoBehaviour
 {
+    public enum  SpawnerType
+    {
+        ST_Vertical,
+        ST_Horizontal
+    }
+
 	#region Variables
 
-	public Transform RightRestriction;
+    public SpawnerType MyType;
+
+	public Transform RightBotRestriction;
     public bool Delayed;
     public bool Top;
 
@@ -92,7 +100,17 @@ public class ShipSpawner : MonoBehaviour
 	{
 		GameObject ship = GameController.Instance.GetShip();
 
-		Vector3 spawnPosition = new Vector3(spawnPosition.x = Random.Range(Mathf.CeilToInt(transform.position.x), Mathf.FloorToInt(RightRestriction.position.x)), transform.position.y, 0f);
+	    Vector3 spawnPosition = Vector3.zero;
+	    switch (MyType)
+	    {
+            case SpawnerType.ST_Horizontal:
+                spawnPosition = new Vector3(spawnPosition.x = Random.Range(Mathf.CeilToInt(transform.position.x), Mathf.FloorToInt(RightBotRestriction.position.x)), transform.position.y, 0f);
+                break;
+            case SpawnerType.ST_Vertical:
+                spawnPosition = new Vector3(transform.position.x, spawnPosition.y = Random.Range(Mathf.FloorToInt(RightBotRestriction.position.y) ,Mathf.CeilToInt(transform.position.y)), 0f);
+	            break;
+	    }
+        
 		Quaternion spawnQuaternion = Quaternion.LookRotation(Vector3.forward, GameController.Instance.IslandTransfrom.position - spawnPosition);
 
 		ship.transform.position = spawnPosition;
