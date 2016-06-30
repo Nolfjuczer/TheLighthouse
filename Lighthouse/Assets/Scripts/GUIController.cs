@@ -53,13 +53,6 @@ public sealed class GUIController : Singleton<GUIController>
 	public LivesController LivesController { get { return _livesController; } }
 
 	[SerializeField]
-	private StatsController _pauseStats = null;
-	[SerializeField]
-	private StatsController WinStats;
-	[SerializeField]
-	private StatsController LoseStats;
-
-	[SerializeField]
 	private StatsController _statsController = null;
 
 	#endregion Score GUI
@@ -201,9 +194,14 @@ public sealed class GUIController : Singleton<GUIController>
 
     public void SetActivePositionToIsland()
     {
-        Vector2 screenPos = GameController.Instance.WorldToScreenPosition(GameController.Instance.IslandTransfrom.position);
-        ActiveButtons.GetComponent<RectTransform>().anchoredPosition = screenPos;
-        SkillButton.GetComponent<Image>().rectTransform.anchoredPosition = screenPos;
+		//resetowanie elementów, które są zależne od instancji w grze nie może się dziać w onEnable
+		GameController instance = GameController.Instance;
+		if (instance != null)
+		{
+			Vector2 screenPos = GameController.Instance.WorldToScreenPosition(GameController.Instance.IslandTransfrom.position);
+			ActiveButtons.GetComponent<RectTransform>().anchoredPosition = screenPos;
+			SkillButton.GetComponent<Image>().rectTransform.anchoredPosition = screenPos;
+		}
     }
 
     public void OnActiveChosen()
@@ -269,15 +267,17 @@ public sealed class GUIController : Singleton<GUIController>
 	{
 		_currentHudState = HUDState.HS_GAME;
         SetActivePositionToIsland();
-	    UpdateActiveGUI(ActiveSkillsEnum.Buoy, 1f);
-        UpdateActiveGUI(ActiveSkillsEnum.SecondLight, 1f);
-        UpdateActiveGUI(ActiveSkillsEnum.Flare, 1f);
-        UpdateActiveGUI(ActiveSkillsEnum.Freeze, 1f);
+	    //UpdateActiveGUI(ActiveSkillsEnum.Buoy, 1f);
+        //UpdateActiveGUI(ActiveSkillsEnum.SecondLight, 1f);
+        //UpdateActiveGUI(ActiveSkillsEnum.Flare, 1f);
+        //UpdateActiveGUI(ActiveSkillsEnum.Freeze, 1f);
         for (int i = 0;i < _hudStateInfoCount;++i)
 		{
 			HUDState tmpState = (HUDState)i;
 			SetPanelActive(tmpState, tmpState == _currentHudState);
 		}
+		HideActiveSkills();
+		_statsController.Show(false);
 	}
 
 	private void SetPanelActive(HUDState state, bool active)
