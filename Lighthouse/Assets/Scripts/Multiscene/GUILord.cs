@@ -62,6 +62,10 @@ public class GUILord : Singleton<GUILord>
 
 	public bool IsTransition { get { return _currentTransitionState != TransitionState.TS_NONE; } }
 
+	public TransitionState CurrentTransitionState { get { return _currentTransitionState; } }
+
+	public System.Action<GUIState> OnPostGUIStateChanged;
+
 	#endregion Variables
 
 	#region Monobehaviour Methods
@@ -225,7 +229,10 @@ public class GUILord : Singleton<GUILord>
 			case TransitionState.TS_FADE_IN:
 				{
 					_transitionTimer -= Time.unscaledDeltaTime;
-					if(_transitionTimer < 0.0f)
+					Color faderColor = _fader.color;
+					faderColor.a = Mathf.Clamp01(_transitionTimer / _transitionLength);
+					_fader.color = faderColor;
+					if (_transitionTimer < 0.0f)
 					{
 						_transitionTimer = 0.0f;
 
@@ -252,12 +259,17 @@ public class GUILord : Singleton<GUILord>
 
 	private void PostGUIStateChange(GUIState newGUIState)
 	{
+		//Debug.LogFormat("Post gui: {0}", newGUIState.ToString());
 		switch(newGUIState)
 		{
 			case GUIState.GUIS_MENU:
 				break;
 			case GUIState.GUIS_GAME:
 				break;
+		}
+		if(OnPostGUIStateChanged != null)
+		{
+			OnPostGUIStateChanged(newGUIState);
 		}
 	}
 

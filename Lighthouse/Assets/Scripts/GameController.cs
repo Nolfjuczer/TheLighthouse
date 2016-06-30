@@ -15,81 +15,111 @@ public enum EGameState : int
 }
 
 [System.Serializable]
-public class ShipCounterType
+public class WinController
 {
-    [SerializeField]
-    private int _ferryCount;
-    [SerializeField]
-    private int _freighterCount;
-    [SerializeField]
-    private int _keelboatCount;
-    [SerializeField]
-    private int _motorboatCount;
+	public enum WinCondition : int
+	{
+		WC_SHIPS_RESCUED = 0,
+		WC_TIME_ELAPSED = 1
+	}
 
-    public int FerryCount
+	[SerializeField]
+	private WinCondition _currentWinCondition = WinCondition.WC_SHIPS_RESCUED;
+	public WinCondition CurrentWinCondition {  get { return _currentWinCondition; } }
+
+	[System.Serializable]
+	public struct SingleShipCounter
+	{
+		public ShipTypeEnum shipType;
+		[System.NonSerialized]
+		public int counter;
+		public int goal;
+		public SingleShipCounter(ShipTypeEnum shipType)
+		{
+			this.shipType = shipType;
+			this.counter = 0;
+			this.goal = 0;
+		}
+	}
+
+	[SerializeField]
+	private SingleShipCounter[] _shipCounters = null;
+	public SingleShipCounter[] ShipTypeCounters { get { return _shipCounters; } }
+
+	[HideInInspector]
+	[SerializeField]
+	private int _shipCounterCount = 0;
+	public int ShipCounterCount {  get { return _shipCounterCount; } }
+
+	[System.NonSerialized]
+	private float _timer = 0.0f;
+	[SerializeField]
+	private float _length = 60.0f;
+
+    public WinController()
     {
-        get { return _ferryCount; }
-    }
-    public int FreighterCount
-    {
-        get { return _freighterCount; }
-    }
-    public int KeelboatCount
-    {
-        get { return _keelboatCount; }
-    }
-    public int MotorboatCount
-    {
-        get { return _motorboatCount; }
+		_shipCounterCount = (int)ShipTypeEnum.COUNT;
+		_shipCounters = new SingleShipCounter[_shipCounterCount];
     }
 
-    public ShipCounterType()
-    {
-        _ferryCount = 0;
-        _freighterCount = 0;
-        _keelboatCount = 0;
-        _motorboatCount = 0;
-    }
-
-    public ShipCounterType(int ferry, int freighter, int keelboat, int motorboat)
-    {
-        _ferryCount = ferry;
-        _freighterCount = freighter;
-        _keelboatCount = keelboat;
-        _motorboatCount = motorboat;
-    }
+	public void Update(float deltaTime)
+	{
+		_timer += deltaTime;
+	}
 
     public void IncrementCounter(ShipTypeEnum shipType)
     {
-        switch (shipType)
-        {
-            case ShipTypeEnum.Ferry:
-                _ferryCount += 1;
-                break;
-            case ShipTypeEnum.Freighter:
-                _freighterCount += 1;
-                break;
-            case ShipTypeEnum.Keelboat:
-                _keelboatCount += 1;
-                break;
-            case ShipTypeEnum.Motorboat:
-                _motorboatCount += 1;
-                break;
-        }
+		int index = (int)shipType;
+		if (index >= 0 && index < _shipCounterCount)
+		{
+			++_shipCounters[index].counter;
+		}
     }
 
-    public bool CompareCounter(ShipCounterType mission)
-    {
-        if (_ferryCount < mission._ferryCount)
-            return false;
-        if (_freighterCount < mission._freighterCount)
-            return false;
-        if (_keelboatCount < mission._keelboatCount)
-            return false;
-        if (_motorboatCount < mission._motorboatCount)
-            return false;
-        return true;
-    }
+	public bool Completed()
+	{
+		bool result = true;
+
+		switch(_currentWinCondition)
+		{
+			case WinCondition.WC_SHIPS_RESCUED:
+				for(int i = 0;i < _shipCounterCount;++i)
+				{
+					if(_shipCounters[i].counter < _shipCounters[i].goal)
+					{
+						result = false;
+						break;
+					}
+				}
+				break;
+			case WinCondition.WC_TIME_ELAPSED:
+				if(_timer < _length)
+				{
+					result = false;
+				}
+				break;
+		}
+
+		return result;
+	}
+	public void Validate()
+	{
+		SingleShipCounter[] oldShipCounters = _shipCounters;
+		int oldShipCounterCount = oldShipCounters != null ? oldShipCounters.Length : 0;
+		_shipCounterCount = (int)ShipTypeEnum.COUNT;
+		if(oldShipCounterCount != _shipCounterCount)
+		{
+			_shipCounters = new SingleShipCounter[_shipCounterCount];
+		}
+		for(int i = 0;i < _shipCounterCount;++i)
+		{
+			if(i < oldShipCounterCount)
+			{
+				_shipCounters[i] = oldShipCounters[i];
+			}
+			_shipCounters[i].shipType = (ShipTypeEnum)i;
+		}
+	}
 }
 
 public class GameController : Singleton<GameController>
@@ -104,7 +134,7 @@ public class GameController : Singleton<GameController>
 			OnGameStateChanged();
         }
     }
-    private EGameState _gameState = EGameState.PreGame;
+    private EGameState _gameState = EGameState.None;
 	private EGameState _pendingGameState = EGameState.None;
 
     public AStar.Grid MainGrid;
@@ -135,6 +165,16 @@ public class GameController : Singleton<GameController>
 		{
 			_referenceResolution = guiLord.ReferenceResolution;
 		}
+
+	}
+
+	void OnValidate()
+	{
+		if(_winController == null)
+		{
+			_winController = new WinController();
+		}
+		_winController.Validate();
 	}
 
     void OnEnable()
@@ -159,6 +199,7 @@ public class GameController : Singleton<GameController>
 		{
 			case EGameState.PreGame:
 				Time.timeScale = 0.0f;
+				ActiveController.Instance.ResetActiveController();
 				break;
 			case EGameState.InGame:
 				Time.timeScale = 1.0f;
@@ -172,9 +213,11 @@ public class GameController : Singleton<GameController>
 				break;
 			case EGameState.Win:
 				Time.timeScale = 0.0f;
+				GUIController.Instance.ChangeHudState(GUIController.HUDState.HS_WIN);
 				break;
 			case EGameState.Lost:
 				Time.timeScale = 0.0f;
+				GUIController.Instance.ChangeHudState(GUIController.HUDState.HS_LOST);
 				break;
 		}
 	}
@@ -191,6 +234,7 @@ public class GameController : Singleton<GameController>
 				}
 				break;
 			case EGameState.InGame:
+				_winController.Update(Time.deltaTime);
 				break;
 			case EGameState.PostGame:
 				if (_stateTimer > stateLength_postGame)
@@ -201,20 +245,19 @@ public class GameController : Singleton<GameController>
 			case EGameState.Paused:
 				break;
 			case EGameState.Win:
-				GUIController.Instance.OnWinGame(_money, _currentShipCounterState, MissionShipCounterState);
+				
 				break;
 			case EGameState.Lost:
-				GUIController.Instance.OnLoseGame(_money, _currentShipCounterState, MissionShipCounterState);
+				
 				break;
 		}
 	}
 
 	private void ResetGameController()
 	{
-		_gameState = EGameState.PreGame;
+		_gameState = EGameState.None;
 		_hp = 3;
 		_money = 0;
-		_currentShipCounterState = new ShipCounterType();
 		MainGrid.RegenerateGrid();
 	}
 
@@ -240,9 +283,10 @@ public class GameController : Singleton<GameController>
 
 	#region InGame
 
-	private ShipCounterType _currentShipCounterState;
-	public ShipCounterType CurrentShipCounterState {  get { return _currentShipCounterState; } }
-    public ShipCounterType MissionShipCounterState = new ShipCounterType();
+	[SerializeField]
+	private WinController _winController;
+	public WinController WinController {  get { return _winController; } }
+  
     private int _hp;
 
     private int _money;
@@ -256,8 +300,8 @@ public class GameController : Singleton<GameController>
 		if (GameState == EGameState.InGame)
 		{
 			_money += 10;
-			_currentShipCounterState.IncrementCounter(shipType);
-			if (_currentShipCounterState.CompareCounter(MissionShipCounterState))
+			_winController.IncrementCounter(shipType);
+			if (_winController.Completed())
 			{
 				GameState = EGameState.PostGame;
 				_pendingGameState = EGameState.Win;

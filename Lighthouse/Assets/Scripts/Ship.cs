@@ -6,12 +6,15 @@ using UnityEngine.UI;
 using Random = UnityEngine.Random;
 using System.Linq;
 
-public enum ShipTypeEnum
+public enum ShipTypeEnum : int
 {
-    Ferry,
+    Ferry = 0,
     Freighter,
     Keelboat,
-    Motorboat
+    Motorboat,
+
+	COUNT,
+	NONE
 }
 
 public class Ship : WandererBehavior

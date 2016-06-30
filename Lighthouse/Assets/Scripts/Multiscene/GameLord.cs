@@ -7,6 +7,9 @@ public class GameLord : MonoBehaviour
 {
 	#region Variables
 
+	private PlayerData _currentPlayerData = null;
+	public PlayerData CurrentPlayerData { get { return _currentPlayerData; } }
+
 	private static GameLord _instance = null;
 	public static GameLord Instance
 	{
@@ -57,6 +60,15 @@ public class GameLord : MonoBehaviour
 		ValidateGameLord();
     }
 
+	void OnApplicationPause(bool pauseStatus)
+	{
+		SavePlayerData();
+    }
+	void OnApplicationQuit()
+	{
+		SavePlayerData();
+	}
+
 	void Awake()
 	{
 		InitializeGameLord();
@@ -66,6 +78,10 @@ public class GameLord : MonoBehaviour
 		if(_guiLord == null)
 		{
 			_guiLord = GUILord.Instance;
+		}
+		if (_guiLord != null)
+		{
+			_guiLord.OnPostGUIStateChanged += OnPostGUIStateChanged;
 		}
 	}
 
@@ -84,6 +100,8 @@ public class GameLord : MonoBehaviour
 
 	private void InitializeGameLord()
 	{
+		_currentPlayerData = PlayerData.Load();
+
 		_instance = this;
 
 		UnityEngine.SceneManagement.Scene activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
@@ -95,6 +113,11 @@ public class GameLord : MonoBehaviour
            } else {
 			_currentGameState = GameState.GS_GAME;
 		}
+	}
+
+	void SavePlayerData()
+	{
+		PlayerData.Save(_currentPlayerData);
 	}
 
 	public void ChangeGameState(GameState newGameState)
@@ -116,14 +139,30 @@ public class GameLord : MonoBehaviour
 			case GameState.GS_GAME:
 				_guiLord.ChangeGUIState(GUILord.GUIState.GUIS_GAME);
 				//ActiveController.Instance.ResetActiveController();
+
+				break;
+		}
+	}
+
+	private void OnPostGUIStateChanged(GUILord.GUIState newState)
+	{
+		switch(newState)
+		{
+			case GUILord.GUIState.GUIS_MENU:
+				PlayerData.Save(_currentPlayerData);
+				break;
+			case GUILord.GUIState.GUIS_GAME:
 				{
+					//Debug.LogFormat("Set to pregame");
 					GameController gameControllerInstance = GameController.Instance;
-					if(gameControllerInstance != null)
+					if (gameControllerInstance != null)
 					{
 						gameControllerInstance.GameState = EGameState.PreGame;
 					}
 					GUIController.Instance.ChangeHudState(GUIController.HUDState.HS_GAME);
 				}
+				break;
+			case GUILord.GUIState.GUIS_LOADING:
 				break;
 		}
 	}

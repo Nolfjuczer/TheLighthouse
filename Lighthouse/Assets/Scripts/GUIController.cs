@@ -51,11 +51,14 @@ public sealed class GUIController : Singleton<GUIController>
 	public LivesController LivesController { get { return _livesController; } }
 
 	[SerializeField]
-	private EndGameGUI _pauseStats = null;
+	private StatsController _pauseStats = null;
 	[SerializeField]
-	private EndGameGUI WinStats;
+	private StatsController WinStats;
 	[SerializeField]
-	private EndGameGUI LoseStats;
+	private StatsController LoseStats;
+
+	[SerializeField]
+	private StatsController _statsController = null;
 
 	#endregion Score GUI
 
@@ -155,26 +158,6 @@ public sealed class GUIController : Singleton<GUIController>
 	#endregion Monobehaviour Methods
 
 	#region Methods
-
-    public void OnWinGame(int total, ShipCounterType current, ShipCounterType goal)
-    {
-        WinStats.TotalScore.text = string.Format("Cash {0}$", total.ToString());
-        WinStats.FerryScore.text = string.Format("{0} / {1}", current.FerryCount, goal.FerryCount);
-        WinStats.FreighterScore.text = string.Format("{0} / {1}", current.FreighterCount, goal.FreighterCount);
-        WinStats.KeelboatScore.text = string.Format("{0} / {1}", current.KeelboatCount, goal.KeelboatCount);
-        WinStats.MotorboatScore.text = string.Format("{0} / {1}", current.MotorboatCount, goal.MotorboatCount);
-        ChangeHudState(HUDState.HS_WIN);
-    }
-
-    public void OnLoseGame(int total, ShipCounterType current, ShipCounterType goal)
-    {
-        LoseStats.TotalScore.text = string.Format("Cash {0}$", total.ToString());
-        LoseStats.FerryScore.text = string.Format("{0} / {1}", current.FerryCount, goal.FerryCount);
-        LoseStats.FreighterScore.text = string.Format("{0} / {1}", current.FreighterCount, goal.FreighterCount);
-        LoseStats.KeelboatScore.text = string.Format("{0} / {1}", current.KeelboatCount, goal.KeelboatCount);
-        LoseStats.MotorboatScore.text = string.Format("{0} / {1}", current.MotorboatCount, goal.MotorboatCount);
-        ChangeHudState(HUDState.HS_LOST);
-    }
 
     public void OnPauseClick()
     {
@@ -307,19 +290,19 @@ public sealed class GUIController : Singleton<GUIController>
 			case HUDState.HS_GAME:
 				ResetHudState();
 				LivesController.ResetLifes();
+				_statsController.Show(false);
 				break;
 			case HUDState.HS_PAUSE:
-				{
-					GameController gameControllerInstace = GameController.Instance;
-					if(gameControllerInstace != null)
-					{
-						_pauseStats.UpdateScore(gameControllerInstace.Money,gameControllerInstace.CurrentShipCounterState,gameControllerInstace.MissionShipCounterState);
-					}
-				}
+				UpdateShipStatsGUI();
+				_statsController.Show(true);
 				break;
 			case HUDState.HS_WIN:
+				UpdateShipStatsGUI();
+				_statsController.Show(true);
 				break;
 			case HUDState.HS_LOST:
+				UpdateShipStatsGUI();
+				_statsController.Show(true);
 				break;
 		}
 	}
@@ -360,6 +343,14 @@ public sealed class GUIController : Singleton<GUIController>
 	{
 		ActiveButtons.SetActive(false);
 		_activeSkillScreen.gameObject.SetActive(false);
+	}
+	public void UpdateShipStatsGUI()
+	{
+		GameController gameControllerInstace = GameController.Instance;
+		if (gameControllerInstace != null)
+		{
+			_statsController.UpdateScore(gameControllerInstace.Money, gameControllerInstace.WinController);
+		}
 	}
 
 	#endregion Methods
