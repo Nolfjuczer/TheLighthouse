@@ -128,7 +128,7 @@ public class ActiveController : Singleton<ActiveController>
 		//BuoyAvailable = true;
 		//FreezeAvailable = true;
 		//SecondAvailable = true;
-		ResetActiveController();
+		//ResetActiveController();
     } 
 
 
