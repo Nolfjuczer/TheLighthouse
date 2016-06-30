@@ -97,6 +97,7 @@ public class LightSteering : MonoBehaviour
 
 	void Update()
 	{
+	    if (GameController.Instance.GameState != EGameState.InGame) return;
 		InputGetter();
 		//LightControll();
 		TestDraw();

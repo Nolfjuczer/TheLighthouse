@@ -38,12 +38,14 @@ public sealed class GUIController : Singleton<GUIController>
 	private GameObject Pause;
 	[SerializeField]
 	private GameObject ActiveButtons;
+    [SerializeField]
+    private GameObject SkillButton;
 
-	#endregion General GUI
+    #endregion General GUI
 
-	#region Score GUI
+    #region Score GUI
 
-	[SerializeField]
+    [SerializeField]
 	private Text Score;
 
 	[SerializeField]
@@ -67,10 +69,10 @@ public sealed class GUIController : Singleton<GUIController>
 		public static Color disabledColor = new Color(0.1f, 0.1f, 0.1f, 40.0f / 255.0f);
 		public static Color[] defaultColors = new Color[]
 		{
-			new Color(1f, 0f, 0f, 40f/255f),
-			new Color(0f, 1f, 0f, 40f/255f),
-			new Color(0f, 1f, 1f, 40f/255f),
-			new Color(1f, 1f, 0f, 40f/255f)
+			new Color(1f, 0f, 0f, 60f/255f),
+			new Color(0f, 1f, 0f, 60f/255f),
+			new Color(0f, 1f, 1f, 60f/255f),
+			new Color(1f, 1f, 0f, 60f/255f)
 		};
 
 		public ActiveSkillsEnum type;
@@ -214,6 +216,13 @@ public sealed class GUIController : Singleton<GUIController>
         ActiveButtons.SetActive(_activeExpanded);
     }
 
+    public void SetActivePositionToIsland()
+    {
+        Vector2 screenPos = GameController.Instance.WorldToScreenPosition(GameController.Instance.IslandTransfrom.position);
+        ActiveButtons.GetComponent<RectTransform>().anchoredPosition = screenPos;
+        SkillButton.GetComponent<Image>().rectTransform.anchoredPosition = screenPos;
+    }
+
     public void OnActiveChosen()
     {
         //CurrentActive.gameObject.SetActive(true);
@@ -276,7 +285,12 @@ public sealed class GUIController : Singleton<GUIController>
 	private void ResetHudState()
 	{
 		_currentHudState = HUDState.HS_GAME;
-		for(int i = 0;i < _hudStateInfoCount;++i)
+        SetActivePositionToIsland();
+	    UpdateActiveGUI(ActiveSkillsEnum.Buoy, 1f);
+        UpdateActiveGUI(ActiveSkillsEnum.SecondLight, 1f);
+        UpdateActiveGUI(ActiveSkillsEnum.Flare, 1f);
+        UpdateActiveGUI(ActiveSkillsEnum.Freeze, 1f);
+        for (int i = 0;i < _hudStateInfoCount;++i)
 		{
 			HUDState tmpState = (HUDState)i;
 			SetPanelActive(tmpState, tmpState == _currentHudState);

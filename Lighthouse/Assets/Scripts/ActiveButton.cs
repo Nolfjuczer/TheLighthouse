@@ -34,6 +34,6 @@ public class ActiveButton : MonoBehaviour
         //}
         //ActiveController.Instance.CurrentActive = Active; 
         //GUIController.Instance.CurrentActive.color = _colors[(int) Active];
-        //GUIController.Instance.OnActiveChosen();
+        GUIController.Instance.OnActiveChosen();
     }
 }

@@ -113,8 +113,12 @@ public class GameController : Singleton<GameController>
     public Camera MainCamera;
 
 	private Vector2 _referenceResolution = Vector2.zero;
+    public Vector2 RereferenceResolution
+    {
+        get { return _referenceResolution; }
+    }
 
-	private float _stateTimer = 0.0f;
+    private float _stateTimer = 0.0f;
 	private const float stateLength_preGame = 1.5f;
 	private const float stateLength_postGame = 3.0f;
 
