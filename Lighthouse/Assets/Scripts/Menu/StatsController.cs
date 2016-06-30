@@ -67,7 +67,7 @@ public class StatsController : MonoBehaviour
 
 	public void UpdateScore(int cash ,WinController shipCounter)
 	{
-		Debug.LogFormat("Update score stats");
+		//Debug.LogFormat("Update score stats");
 
 		_totalScore.text = string.Format("Cash ${0}", cash.ToString());
 		//FerryScore.text = string.Format("{0} / {1}", currentScore.FerryCount, targetScore.FerryCount);
