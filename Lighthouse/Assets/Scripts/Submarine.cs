@@ -6,6 +6,13 @@ using UnityEngine.UI;
 
 public class Submarine : MonoBehaviour
 {
+    public enum EmergeState
+    {
+        ES_Up,
+        ES_Down,
+        ES_None
+    }
+
     [Range(1, 4)]
     public int ShipManoeuvrability = 1;
     [Range(1, 4)]
@@ -13,6 +20,7 @@ public class Submarine : MonoBehaviour
 
     public GameObject BotPart;
 
+    private EmergeState _emergeState;
     private float _fearTimer = 0f;
     private float _mineTimer = 0f;
     private float _mineNeedTime = 2f;
@@ -65,6 +73,7 @@ public class Submarine : MonoBehaviour
 
     public void OnEnable()
     {
+        _emergeState = EmergeState.ES_None;
 		GameObject circleGO = InstanceLord.Instance.GetInstance(InstanceLord.InstanceType.IT_CIRCLE);
 		//_circleImage = GameController.Instance.GetProgressCricle(transform.position);
 		_circleImage = circleGO.GetComponent<Image>();
@@ -119,10 +128,8 @@ public class Submarine : MonoBehaviour
             if (Vector3.Distance(transform.position, _currentElement.transform.position) < 0.2f)
             {
                 NextGridElement();
-                if(_myAgent.Path.Count == 1)
-                    StartCoroutine(EmergeCoroutine(true));
-                if (_currentElement == null)
-                    StartCoroutine("MineTime");
+                if(_myAgent.Path.Count == 0)
+                    StartCoroutine("EmergeCoroutine", true);
             }
 
             transform.position += transform.up.normalized * ShipSpeed * Time.deltaTime * _speedMultiplier;
@@ -131,6 +138,7 @@ public class Submarine : MonoBehaviour
 
     protected IEnumerator EmergeCoroutine(bool flag)
     {
+        _emergeState = flag ? EmergeState.ES_Up : EmergeState.ES_Down;
         _emergeTimer = flag ? 0f : _emergeNeedTime;
         while (true)
         {
@@ -157,22 +165,19 @@ public class Submarine : MonoBehaviour
             }
             yield return null;
         }
+        _emergeState = EmergeState.ES_None;
         _emerged = flag;
     }
 
     protected IEnumerator MineTime()
     {
-        while (!_emerged)
-        {
-            yield return null;
-        }
         while (_mineTimer < _mineNeedTime)
         {
             if (!_lighted) _mineTimer += Time.deltaTime;
             yield return null;
         }
         SpawnMine();
-        StartCoroutine(EmergeCoroutine(false));
+        StartCoroutine("EmergeCoroutine", false);
     }
 
     protected void SpawnMine()
@@ -189,43 +194,60 @@ public class Submarine : MonoBehaviour
         }
         _currentElement = _myAgent.Path[0] as WaterGridElement;
         _myAgent.Path.RemoveAt(0);
-
-		//SpawnMine();
     }
 
     protected IEnumerator FearOfTheLight()
     {
         GameController.Instance.SetCirclePosition(_circleImage, gameObject.transform.position);
+        _circleImage.fillAmount = 0f;
         _circleImage.enabled = true;
         while (_fearTimer < 1f)
         {
-            _fearTimer += Time.deltaTime;
-            _circleImage.fillAmount = _fearTimer;
+            if (_emerged && _emergeState == EmergeState.ES_None)
+            {
+                _fearTimer += Time.deltaTime;
+                _circleImage.fillAmount = _fearTimer;
+                GameController.Instance.SetCirclePosition(_circleImage, gameObject.transform.position);
+            }
             yield return null;
         }
-        _fearTimer = 0f;
-        _circleImage.enabled = false;
-        _mineTimer = 0f;
-        StartCoroutine(EmergeCoroutine(false));
-        StopCoroutine("MineTime");
+        if (_lighted)
+        {
+            _fearTimer = 0f;
+            _circleImage.enabled = false;
+            _mineTimer = 0f;
+            if (_emergeState != EmergeState.ES_Down)
+            {
+                StopCoroutine("EmergeCoroutine");
+                StartCoroutine("EmergeCoroutine",false);                            
+            }
+            StopCoroutine("MineTime");
+        }
     }
 
     private IEnumerator UnfearOfTheLight()
     {
+        _circleImage.fillAmount = 0f;
+        _circleImage.enabled = true;
         while (_fearTimer > 0f)
         {
-            _fearTimer -= Time.deltaTime;
-            _circleImage.fillAmount = _fearTimer;
+            if (_emerged && _emergeState == EmergeState.ES_None)
+            {
+                _fearTimer -= Time.deltaTime;
+                _circleImage.fillAmount = _fearTimer;
+                GameController.Instance.SetCirclePosition(_circleImage, gameObject.transform.position);
+            }
             yield return null;
         }
-        _fearTimer = 0f;
-        _circleImage.enabled = false;
+        if (!_lighted)
+        {
+            _fearTimer = 0f;
+            _circleImage.enabled = false;           
+        }
     }
 
     public void OnTriggerEnter2D(Collider2D col2D)
     {
-        if (!_emerged) return;
-
         if (col2D.gameObject.layer == LayerMask.NameToLayer("Light"))
         {
             _lighted = true;
@@ -237,8 +259,6 @@ public class Submarine : MonoBehaviour
 
     public void OnTriggerExit2D(Collider2D col2D)
     {
-        if (!_emerged || _emergeTimer > 0f) return;
-
         if (col2D.gameObject.layer == LayerMask.NameToLayer("Light"))
         {
             _lighted = false;
