@@ -11,10 +11,17 @@ public class Obstacle : MonoBehaviour
 {
 
     public ObstacleTypeEnum ObstacleType;
+    public Sprite[] IslandSprites;
 
     public void OnEnable()
     {
         if (ObstacleType == ObstacleTypeEnum.Whirlpool) StartCoroutine(WhirpoolBehavior());
+        else
+        {
+            SpriteRenderer render = null;
+            render = GetComponent<SpriteRenderer>();
+            if (render != null) render.sprite = IslandSprites[Random.Range(0, 3)];
+        }
     }
 
     private IEnumerator WhirpoolBehavior()
