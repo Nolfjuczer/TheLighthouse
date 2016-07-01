@@ -383,6 +383,13 @@ public FlareActive GetFlare(Vector3 spawnPosition)
     {
         GameObject ship = null;
         int type = Random.Range(0, 4);
+		if(WinController.CurrentWinCondition == WinController.WinCondition.WC_SHIPS_RESCUED)
+		{
+			while(WinController.ShipTypeCounters[type].goal <= 0)
+			{
+				type = (type + 1) % 4;
+			}
+		}
         switch (type)
         {
             case 0:

@@ -49,7 +49,6 @@ public class GameLord : MonoBehaviour
 	private int _levelCount = 0;
 
     public Action OnReloadStage;
-
 	
 	#endregion Variables
 
@@ -224,6 +223,26 @@ public class GameLord : MonoBehaviour
 			yield return null;
 		}
 		ChangeGameState(GameState.GS_MENU);
+	}
+
+	public void NextLevel()
+	{
+		if(CurrentGameState == GameState.GS_GAME)
+		{
+			int currentLevelIndex = -1;
+			for(int i = 0;i < _levelCount;++i)
+			{
+				if(_levels[i] == _currentSceneName)
+				{
+					currentLevelIndex = i;
+					break;
+				}
+			}
+			if(currentLevelIndex != -1 && currentLevelIndex < _levelCount - 1)
+			{
+				LoadScene(_levels[currentLevelIndex + 1]);
+			}
+		}
 	}
 
 	#endregion Methods

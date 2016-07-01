@@ -70,10 +70,10 @@ public class LightSteering : MonoBehaviour
 	}
 	void OnDisable()
 	{
-		//PowerUpController.Instance.PowerUpInfos[(int)PowerUpType.PLightEnlarger].OnPowerUpStateChange -= OnLightEnlargeStateChanged;
-		//PowerUpController.Instance.PowerUpInfos[(int)PowerUpType.NDirectionSwapper].OnPowerUpStateChange -= OnDirectionSwap;
-		//
-		//ActiveController.Instance.ActiveInfos[(int)ActiveSkillsEnum.SecondLight].OnActiveSkillUsed -= OnSecondLight;
+		PowerUpController.Instance.PowerUpInfos[(int)PowerUpType.PLightEnlarger].OnPowerUpStateChange -= OnLightEnlargeStateChanged;
+		PowerUpController.Instance.PowerUpInfos[(int)PowerUpType.NDirectionSwapper].OnPowerUpStateChange -= OnDirectionSwap;
+		
+		ActiveController.Instance.ActiveInfos[(int)ActiveSkillsEnum.SecondLight].OnActiveSkillUsed -= OnSecondLight;
 
 		//PowerUpController.Instance.DirectionSwapperBegin -= InvertSteeringBegin;
 		//PowerUpController.Instance.DirectionSwapperEnd -= InvertSteeringEnd;

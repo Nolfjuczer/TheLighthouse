@@ -891,6 +891,7 @@ public class Ship : WandererBehavior
 
 	public void NotifyCapture(float deltaCapture)
 	{
+		//Debug.Log("Notify capture");
 		_captureCoolingTimer = 0.0f;
 		_captureProgres += deltaCapture;
 		if (_circleImage == null)

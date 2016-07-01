@@ -6,6 +6,12 @@ public sealed class PlayerData
 {
 	#region Variables
 
+	public struct LevelInfo
+	{
+		public int levelIndex;
+		public int maxCash;
+	}
+
 	public const string playerDataKey = "PlayerData";
 
 	#endregion Variables

@@ -176,7 +176,7 @@ public sealed class GUIController : Singleton<GUIController>
 
 	public void OnNextClick()
 	{
-		//TODO
+		GameLord.Instance.NextLevel();
 	}
 
     public void OnMenuClick()

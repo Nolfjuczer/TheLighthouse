@@ -16,6 +16,7 @@ public class FlareActive : Active
 			Ship tmpShip = other.gameObject.GetComponent<Ship>();
 			if(tmpShip != null)
 			{
+				//Debug.Log("Ship");	
 				float deltaCapture = PowerUpController.Instance.CaptureTimeScale * UnityEngine.Time.deltaTime;
 				tmpShip.NotifyCapture(deltaCapture);
 			}
