@@ -106,6 +106,8 @@ public class Ship : WandererBehavior
 	[SerializeField]
 	private Transform _transform = null;
 
+    private bool _colidable;
+
 	//private float _checkDistance = 1.5f;
 
 	#endregion Variables
@@ -201,6 +203,7 @@ public class Ship : WandererBehavior
 		_trailRenderer.enabled = true;
 
 		_captureProgres = 0.0f;
+	    _colidable = false;
 
 		GameObject circleGO = InstanceLord.Instance.GetInstance(InstanceLord.InstanceType.IT_CIRCLE);
 		if (circleGO == null)
@@ -246,16 +249,12 @@ public class Ship : WandererBehavior
 
 	public void OnTriggerEnter2D(Collider2D col2D)
 	{
-		if (!_renderer.isVisible) return;
-		if (GameController.Instance.GameState != EGameState.InGame) return;
-
-		//if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && _captureTimer < CaptureTime && !_gotToPort)
-		//{
-		//	_enlighted = true;
-		//	StopCoroutine("UncaptureByLightHouse");
-		//	StartCoroutine("CaptureByLightHouse");
-		//	return;
-		//}
+        if (GameController.Instance.GameState != EGameState.InGame) return;
+        if (col2D.gameObject.layer == LayerMask.NameToLayer("CollisionEnabler"))
+        {
+            _colidable = true;
+        }
+        if (!_colidable) return;
 
 		if (col2D.gameObject.layer == LayerMask.NameToLayer("Ship") && !Captured)
 		{
@@ -285,17 +284,20 @@ public class Ship : WandererBehavior
 
 	public void OnTriggerExit2D(Collider2D col2D)
 	{
-		if (!_renderer.isVisible) return;
-		if (GameController.Instance.GameState != EGameState.InGame) return;
+        if (GameController.Instance.GameState != EGameState.InGame) return;
+        if (col2D.gameObject.layer == LayerMask.NameToLayer("CollisionEnabler"))
+        {
+            _colidable = false;
+        }
 
-		//if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && !_gotToPort)
-		//{
-		//	_enlighted = false;
-		//	if (Captured) return;
-		//	StopCoroutine("CaptureByLightHouse");
-		//	StartCoroutine("UncaptureByLightHouse");
-		//}
-	}
+        //if ((col2D.gameObject.layer == LayerMask.NameToLayer("Light") || col2D.gameObject.layer == LayerMask.NameToLayer("Flare")) && !_gotToPort)
+        //{
+        //	_enlighted = false;
+        //	if (Captured) return;
+        //	StopCoroutine("CaptureByLightHouse");
+        //	StartCoroutine("UncaptureByLightHouse");
+        //}
+    }
 
 	public void Update()
 	{

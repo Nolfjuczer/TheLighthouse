@@ -17,13 +17,16 @@ public class ShipSpawner : MonoBehaviour
 
 	public Transform RightBotRestriction;
     public bool Delayed;
-    public bool Top;
 
-	private const int cycleSpawnCount = 3;
-	private const float spawnInterval = 5.0f;
-	private const float cycleInterval = 15.0f;
+	public int MaxCycleSpawn = 3;
+	public Vector2 SpawnIntervalMaxMin = new Vector2(5.0f,3.0f);
+    private float _currentSpawnInterval;
+    public float SpawnIntervalDecreaserPerCycle = 0.5f;
+	public Vector2 CycleIntervalMaxMin = new Vector2(15.0f,10f);
+    private float _currentCycleInterval;
+    public float CycleIntervalDecreaserPerCycle = 0.5f;
 
-	private float _timer = 0.0f;
+    private float _timer = 0.0f;
     private int _spawnedThisCycle = 0;
 
 	#endregion Variables
@@ -38,6 +41,8 @@ public class ShipSpawner : MonoBehaviour
 		} else {
 			_timer = 0.0f;
 		}
+	    _currentCycleInterval = CycleIntervalMaxMin.x;
+	    _currentSpawnInterval = SpawnIntervalMaxMin.x;
 	}
 
 	void Update()
@@ -53,32 +58,6 @@ public class ShipSpawner : MonoBehaviour
 
 	#region Methods
 
-	//public IEnumerator SpawnnCycle()
-    //{
-	//
-    //    while (true)
-    //    {
-    //        if (Delayed)
-    //        {
-    //            Delayed = false;
-    //            yield return new WaitForSeconds(1.5f);
-    //        }
-	//		if (GameController.Instance.GameState != EGameState.InGame)
-	//		{
-	//			yield break;
-	//		}
-	//		SpawnShip();
-	//		 ++_spawnedThisCycle;
-    //        yield return new  WaitForSeconds(5f);
-	//
-    //        if (_spawnedThisCycle >= 3)
-    //        {
-    //            yield return new WaitForSeconds(15f);
-    //            _spawnedThisCycle = 0;
-    //        }
-    //    }
-    //}
-
 	private void ProcessSpawning()
 	{
 		float deltaTime = Time.deltaTime;
@@ -86,13 +65,20 @@ public class ShipSpawner : MonoBehaviour
 		if(_timer <  0.0f)
 		{
 			SpawnShip();
-			if(_spawnedThisCycle < cycleSpawnCount)
+			if(_spawnedThisCycle < MaxCycleSpawn)
 			{
-				_timer += spawnInterval;
-			} else {
-				_timer += cycleInterval;
-				_spawnedThisCycle = 0;
+				_timer += _currentSpawnInterval;
 			}
+            else
+            {
+				_timer += _currentCycleInterval;
+				_spawnedThisCycle = 0;
+			    _currentCycleInterval = Mathf.Clamp(_currentCycleInterval - CycleIntervalDecreaserPerCycle, CycleIntervalMaxMin.y,
+			        CycleIntervalMaxMin.x);
+
+                _currentSpawnInterval = Mathf.Clamp(_currentSpawnInterval - SpawnIntervalDecreaserPerCycle, SpawnIntervalMaxMin.y,
+                    SpawnIntervalMaxMin.x);
+            }
 		}
 	}
 
