@@ -42,7 +42,10 @@ public class WinController
 		}
 	}
 
-	[SerializeField]
+    [HideInInspector]
+    public int CollectedShips;
+    public int ShipCounterTotal = 5;
+    [SerializeField]
 	private SingleShipCounter[] _shipCounters = null;
 	public SingleShipCounter[] ShipTypeCounters { get { return _shipCounters; } }
 
@@ -52,9 +55,9 @@ public class WinController
 	public int ShipCounterCount {  get { return _shipCounterCount; } }
 
 	[System.NonSerialized]
-	private float _timer = 0.0f;
+	public float _timer = 0.0f;
 	[SerializeField]
-	private float _length = 60.0f;
+	public float _length = 60.0f;
 
     public WinController()
     {
@@ -83,15 +86,18 @@ public class WinController
 		switch(_currentWinCondition)
 		{
 			case WinCondition.WC_SHIPS_RESCUED:
+		        int total = 0;
 				for(int i = 0;i < _shipCounterCount;++i)
 				{
-					if(_shipCounters[i].counter < _shipCounters[i].goal)
-					{
-						result = false;
-						break;
-					}
+				    total += _shipCounters[i].counter;
 				}
-				break;
+		        CollectedShips = total;
+                if (CollectedShips < ShipCounterTotal)
+                {
+                    result = false;
+                    break;
+                }
+                break;
 			case WinCondition.WC_TIME_ELAPSED:
 				if(_timer < _length)
 				{

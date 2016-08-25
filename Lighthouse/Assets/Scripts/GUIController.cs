@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -121,13 +122,18 @@ public sealed class GUIController : Singleton<GUIController>
 	[SerializeField]
 	private int _powerUpInfoCount = 0;
 
-	#endregion Power Ups GUI
+    #endregion Power Ups GUI
 
-	#endregion Variables
+    #region TutorialPopUp
+    [SerializeField]
+    private GameObject[] _tutorialPopUps; 
+    public GameObject[] TutorialPopUps { get { return _tutorialPopUps; } }
+    #endregion
+    #endregion Variables
 
-	#region Monobehaviour Methods
+    #region Monobehaviour Methods
 
-	void OnValidate()
+    void OnValidate()
 	{
 		ValidateGUIController();
 	}
@@ -146,13 +152,32 @@ public sealed class GUIController : Singleton<GUIController>
     {
 		if (GameLord.Instance.CurrentGameState == GameLord.GameState.GS_GAME)
 		{
-			Score.text = string.Format("$ {0}",GameController.Instance.Money);
-		}
+            //Score.text = string.Format("$ {0}",GameController.Instance.Money);
+		    switch (GameController.Instance.WinController.CurrentWinCondition)
+		    {
+		        case WinController.WinCondition.WC_SHIPS_RESCUED:
+                    Score.text = string.Format(" {0} / {1}", GameController.Instance.WinController.CollectedShips, GameController.Instance.WinController.ShipCounterTotal);
+                    break;
+                case WinController.WinCondition.WC_TIME_ELAPSED:
+		            float timer = GameController.Instance.WinController._timer;
+                    float total = GameController.Instance.WinController.ShipCounterTotal;
+                    Score.text = string.Format(" {0}:{1} / {2}:{3}", (int) timer / 60, timer % 60, (int) total / 60, total % 60);
+                    break;
+		    }
+        }
     }
 
 	#endregion Monobehaviour Methods
 
 	#region Methods
+
+    public void OnTutorialPopUpClick()
+    {
+        if (PopUpController.Instance != null)
+        {
+            PopUpController.Instance.NextPopUp();
+        }
+    }
 
     public void OnPauseClick()
     {

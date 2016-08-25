@@ -86,7 +86,9 @@ public class ActiveController : Singleton<ActiveController>
 		{
 			timer += deltaTime;
 			float progres = Mathf.Clamp01(timer / cooldown);
-			GUIController.Instance.UpdateActiveGUI(activeType, progres);
+			if( GUIController.Instance != null) GUIController.Instance.UpdateActiveGUI(activeType, progres);
+            else
+                Debug.Log("null :D");
 		}
 
 		public void Activate()

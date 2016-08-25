@@ -302,6 +302,7 @@ public class Ship : WandererBehavior
 	public void Update()
 	{
 		//ShipMovement();
+	    if (GameController.Instance != null && GameController.Instance.GameState != EGameState.InGame) return;
 		ProcesShipState();
 	}
 
