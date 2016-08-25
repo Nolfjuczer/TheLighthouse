@@ -15,16 +15,16 @@ public class StatsController : MonoBehaviour
 
 		public void UpdateScore(WinController.WinCondition winCondition, int current, int target)
 		{
-			switch (winCondition)
-			{
-				case WinController.WinCondition.WC_SHIPS_RESCUED:
-					scoreText.text = string.Format("{0} / {1}", current, target);
-					break;
-				case WinController.WinCondition.WC_TIME_ELAPSED:
-					scoreText.text = string.Format("{0}", current);
-					break;
-			}
-			
+            scoreText.text = string.Format("{0}", current);
+   //         switch (winCondition)
+			//{
+			//	case WinController.WinCondition.WC_SHIPS_RESCUED:
+			//		scoreText.text = string.Format("{0} / {1}", current, target);
+			//		break;
+			//	case WinController.WinCondition.WC_TIME_ELAPSED:
+   //                 scoreText.text = string.Format("{0}", current);
+   //                 break;
+			//}
 		}
 	}
 
@@ -79,17 +79,22 @@ public class StatsController : MonoBehaviour
 
 		for(int i = 0;i < shipCounter.ShipCounterCount;++i)
 		{
-			if(shipCounter.ShipTypeCounters[i].goal > 0)
-			{
-				_shipTypeGUIInfos[i].rectTransform.gameObject.SetActive(true);
-				_shipTypeGUIInfos[i].rectTransform.anchoredPosition = new Vector2(0.0f,currentHeight);
-				currentHeight -= _shipTypeGUIInfos[i].rectTransform.sizeDelta.y;
+            _shipTypeGUIInfos[i].rectTransform.gameObject.SetActive(true);
+            _shipTypeGUIInfos[i].rectTransform.anchoredPosition = new Vector2(0.0f, currentHeight);
+            currentHeight -= _shipTypeGUIInfos[i].rectTransform.sizeDelta.y;
 
-				_shipTypeGUIInfos[i].UpdateScore(shipCounter.CurrentWinCondition, shipCounter.ShipTypeCounters[i].counter, shipCounter.ShipTypeCounters[i].goal);
-            } else {
-				_shipTypeGUIInfos[i].rectTransform.gameObject.SetActive(false);
-			}
-		}
+            _shipTypeGUIInfos[i].UpdateScore(shipCounter.CurrentWinCondition, shipCounter.ShipTypeCounters[i].counter, shipCounter.ShipTypeCounters[i].goal);
+            //if(shipCounter.ShipTypeCounters[i].goal > 0)
+            //{
+            //	_shipTypeGUIInfos[i].rectTransform.gameObject.SetActive(true);
+            //	_shipTypeGUIInfos[i].rectTransform.anchoredPosition = new Vector2(0.0f,currentHeight);
+            //	currentHeight -= _shipTypeGUIInfos[i].rectTransform.sizeDelta.y;
+
+            //	_shipTypeGUIInfos[i].UpdateScore(shipCounter.CurrentWinCondition, shipCounter.ShipTypeCounters[i].counter, shipCounter.ShipTypeCounters[i].goal);
+            //         } else {
+            //	_shipTypeGUIInfos[i].rectTransform.gameObject.SetActive(false);
+            //}
+        }
 	}
 
 	public void Show(bool visible)
