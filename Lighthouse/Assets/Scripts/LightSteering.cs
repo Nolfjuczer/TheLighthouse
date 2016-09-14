@@ -157,12 +157,16 @@ public class LightSteering : MonoBehaviour
         {
             if (_targeted && InputManager.Instance.PreviousFrameTouch)
             {
-                Vector2 prev = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.PreviousTouchPosition);
-                Vector2 cur = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.TouchPosition);
+                Vector2 previous = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.PreviousTouchPosition);
+                Vector2 current = GameController.Instance.MainCamera.ScreenToWorldPoint(InputManager.Instance.TouchPosition);
 
-                float angle = Vector2.Angle(prev, cur);
+				Vector2 lighthousePosition = _transform.position;
+				Vector2 prevDirection = (previous - lighthousePosition).normalized;
+				Vector2 currentDirection = (current - lighthousePosition).normalized;
 
-                Vector3 cross = Vector3.Cross(prev, cur);
+				float angle = Vector2.Angle(prevDirection, currentDirection);
+
+                Vector3 cross = Vector3.Cross(prevDirection, currentDirection);
                 angle = cross.z > 0 ? angle : 360f - angle;
 
                 gameObject.transform.Rotate(Vector3.forward, _invertSteering ? -angle : angle);

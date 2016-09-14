@@ -39,6 +39,8 @@ public sealed class GUIController : Singleton<GUIController>
 	private GameObject Pause;
 	[SerializeField]
 	private GameObject ActiveButtons;
+	[SerializeField]
+	private GameObject _hideActiveSkillsButton;
     [SerializeField]
     private GameObject SkillButton;
 
@@ -160,8 +162,8 @@ public sealed class GUIController : Singleton<GUIController>
                     break;
                 case WinController.WinCondition.WC_TIME_ELAPSED:
 		            float timer = GameController.Instance.WinController._timer;
-                    float total = GameController.Instance.WinController.ShipCounterTotal;
-                    Score.text = string.Format(" {0}:{1} / {2}:{3}", (int) timer / 60, timer % 60, (int) total / 60, total % 60);
+                    float total = GameController.Instance.WinController._length;
+                    Score.text = string.Format(" {0:0.}:{1:00.} / {2:0.}:{3:00.}", (int) timer / 60.0f, timer % 60.0f, (int) total / 60.0f, total % 60.0f);
                     break;
 		    }
         }
@@ -215,6 +217,7 @@ public sealed class GUIController : Singleton<GUIController>
     {
         _activeExpanded = !_activeExpanded;
         ActiveButtons.SetActive(_activeExpanded);
+		_hideActiveSkillsButton.SetActive(_activeExpanded);
     }
 
     public void SetActivePositionToIsland()
@@ -234,7 +237,8 @@ public sealed class GUIController : Singleton<GUIController>
         //CurrentActive.gameObject.SetActive(true);
         _activeExpanded = false;
         ActiveButtons.SetActive(false);
-    }
+		_hideActiveSkillsButton.SetActive(false);
+	}
 
 	private void ValidateGUIController()
 	{
@@ -371,6 +375,7 @@ public sealed class GUIController : Singleton<GUIController>
 	public void ShowSkillScreen(ActiveSkillsEnum type)
 	{
 		ActiveButtons.SetActive(false);
+		_hideActiveSkillsButton.SetActive(false);
 		int index = (int)type;
 		if(index  >= 0 && index < _activeSkillsGUIInfoCount)
 		{
@@ -381,6 +386,7 @@ public sealed class GUIController : Singleton<GUIController>
 	public void HideActiveSkills()
 	{
 		ActiveButtons.SetActive(false);
+		_hideActiveSkillsButton.SetActive(false);
 		_activeSkillScreen.gameObject.SetActive(false);
 	}
 	public void UpdateShipStatsGUI()
