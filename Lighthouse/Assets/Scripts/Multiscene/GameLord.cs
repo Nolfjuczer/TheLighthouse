@@ -3,6 +3,20 @@ using UnityEngine;
 using System.Collections;
 using System.Linq;
 
+/*
+	#region Variables
+
+	#endregion Variables
+
+	#region Monobehaviour Methods
+
+	#endregion Monobehaviour Methods
+
+	#region Methods
+
+	#endregion Methods
+*/
+
 public class GameLord : MonoBehaviour
 {
 	#region Variables

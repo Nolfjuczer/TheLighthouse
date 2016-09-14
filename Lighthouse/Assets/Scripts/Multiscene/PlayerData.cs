@@ -12,6 +12,9 @@ public sealed class PlayerData
 		public int maxCash;
 	}
 
+	public bool audio = true;
+	public bool music = true;
+
 	public const string playerDataKey = "PlayerData";
 
 	#endregion Variables
@@ -22,7 +25,8 @@ public sealed class PlayerData
 	{
 		if(first)
 		{
-
+			audio = true;
+			music = true;
 		}
 	}
 
