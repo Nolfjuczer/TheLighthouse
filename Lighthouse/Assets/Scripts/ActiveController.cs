@@ -237,6 +237,7 @@ public class ActiveController : Singleton<ActiveController>
 
 	public void ActivateSkill(ActiveSkillsEnum type)
 	{
+		GUILord.ButtonSound();
 		int index = (int)type;
 		if(index >= 0 && index < _activeInfoCount)
 		{

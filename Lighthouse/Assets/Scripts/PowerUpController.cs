@@ -218,6 +218,7 @@ public class PowerUpController : Singleton<PowerUpController>
 
     public void ApplyPowerUp(PowerUpType type)
     {
+		Audio.Instance.PlayBuildInSound(Audio.BuildInSound.BonusPickup);
 		int index = (int)type;
 		if(index >= 0 && index < _powerUpInfoCount)
 		{

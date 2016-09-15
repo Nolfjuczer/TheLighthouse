@@ -177,45 +177,52 @@ public sealed class GUIController : Singleton<GUIController>
     {
         if (PopUpController.Instance != null)
         {
-            PopUpController.Instance.NextPopUp();
+			GUILord.ButtonSound();
+			PopUpController.Instance.NextPopUp();
         }
     }
 
     public void OnPauseClick()
     {
-        GameController.Instance.GameState = EGameState.Paused;
+		GUILord.ButtonSound();
+		GameController.Instance.GameState = EGameState.Paused;
 		//Pause.SetActive(true);
 		ChangeHudState(HUDState.HS_PAUSE);
     }
 
     public void OnResumeClick()
     {
-        GameController.Instance.GameState = EGameState.InGame;
+		GUILord.ButtonSound();
+		GameController.Instance.GameState = EGameState.InGame;
 		//Pause.SetActive(false);
 		ChangeHudState(HUDState.HS_GAME);
     }
 
     public void OnRestartClick()
     {
-        GameController.Instance.GameState = EGameState.InGame;
+		GUILord.ButtonSound();
+		GameController.Instance.GameState = EGameState.InGame;
 		GameLord.Instance.LoadScene(GameLord.Instance.CurrentSceneName);
     }
 
 	public void OnNextClick()
 	{
+		GUILord.ButtonSound();
 		GameLord.Instance.NextLevel();
 	}
 
     public void OnMenuClick()
     {
-        GameController.Instance.GameState = EGameState.InGame;
+		GUILord.ButtonSound();
+		GameController.Instance.GameState = EGameState.InGame;
 		//SceneManager.LoadScene(0);
 		GameLord.Instance.SwitchToMenu();
     }
 
     public void OnExpandActive()
     {
-        _activeExpanded = !_activeExpanded;
+		GUILord.ButtonSound();
+		_activeExpanded = !_activeExpanded;
         ActiveButtons.SetActive(_activeExpanded);
 		_hideActiveSkillsButton.SetActive(_activeExpanded);
     }
@@ -234,8 +241,9 @@ public sealed class GUIController : Singleton<GUIController>
 
     public void OnActiveChosen()
     {
-        //CurrentActive.gameObject.SetActive(true);
-        _activeExpanded = false;
+		GUILord.ButtonSound();
+		//CurrentActive.gameObject.SetActive(true);
+		_activeExpanded = false;
         ActiveButtons.SetActive(false);
 		_hideActiveSkillsButton.SetActive(false);
 	}

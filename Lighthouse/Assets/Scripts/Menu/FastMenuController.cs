@@ -87,19 +87,23 @@ public class FastMenuController : MonoBehaviour
 
 	public void ClickLevelSelect()
 	{
-		ChangeMenuState(FastMenuState.FMS_LEVEL_SELECT);
+		GUILord.ButtonSound();
+        ChangeMenuState(FastMenuState.FMS_LEVEL_SELECT);
 	}
 
 	public void ClickMenuMain()
 	{
+		GUILord.ButtonSound();
 		ChangeMenuState(FastMenuState.FMS_MAIN);
 	}
 	public void ClickMenuCredits()
 	{
+		GUILord.ButtonSound();
 		ChangeMenuState(FastMenuState.FMS_CREDITS);
 	}
 	public void ClickQuitApp()
 	{
+		GUILord.ButtonSound();
 		Application.Quit();
 	}
 
@@ -109,6 +113,7 @@ public class FastMenuController : MonoBehaviour
 		int levelCount = levels.Length;
 		if (levelIndex >= 0 && levelIndex < levelCount)
 		{
+			GUILord.ButtonSound();
 			GameLord.Instance.LoadScene(levels[levelIndex]);
 		}
 	}

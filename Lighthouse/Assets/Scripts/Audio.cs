@@ -9,6 +9,9 @@ public class Audio : MonoBehaviour
 	{
 		Crash,
 		Bell,
+		DoubleBell,
+		ButtonClick,
+		BonusPickup,
 
 		Count,
 		None

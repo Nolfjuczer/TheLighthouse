@@ -39,7 +39,7 @@ public class Ship : WandererBehavior
 	private float _captureCoolingTimer = 0.0f;
 	private float _captureCoolingLength = 0.25f;
 	private float _captureProgres = 0.0f;
-	private float _captureToCoolTimeRatio = 0.5f;
+	private float _captureToCoolTimeRatio = 0.25f;
 
 	public ShipTypeEnum ShipType;
     [Range(1,4)]
@@ -345,6 +345,7 @@ public class Ship : WandererBehavior
 
     public void GetToPort()
     {
+		Audio.Instance.PlayBuildInSound(Audio.BuildInSound.DoubleBell);
         _gotToPort = true;
 		ChangeShipState(ShipState.SS_ARRIVED);
         StartCoroutine(ArriveToLand());
@@ -352,6 +353,7 @@ public class Ship : WandererBehavior
 
     public void DestoryOnIsland()
     {
+		Audio.Instance.PlayBuildInSound(Audio.BuildInSound.Crash);
 		ChangeShipState(ShipState.SS_DEAD);
 		//if(_captureTimer > 0f) StopCoroutine("CaptureByLightHouse");
 		_trailRenderer.enabled = false;
@@ -872,6 +874,7 @@ public class Ship : WandererBehavior
 
 		if (_currentShipState == ShipState.SS_WANDER && _captureProgres >= CaptureTime)
 		{
+			Audio.Instance.PlayBuildInSound(Audio.BuildInSound.Bell);
 			ChangeShipState(ShipState.SS_CAPTURED);
 		}
 		if(_currentShipState == ShipState.SS_CAPTURED && _captureProgres <= 0.0f)

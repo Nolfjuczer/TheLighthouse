@@ -273,5 +273,10 @@ public class GUILord : Singleton<GUILord>
 		}
 	}
 
+	public static void ButtonSound()
+	{
+		Audio.Instance.PlayBuildInSound(Audio.BuildInSound.ButtonClick);
+	}
+
 	#endregion Methods
 }

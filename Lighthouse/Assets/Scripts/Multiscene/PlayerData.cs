@@ -28,6 +28,11 @@ public sealed class PlayerData
 			audio = true;
 			music = true;
 		}
+		else
+		{
+			audio = true;
+			music = true;
+		}
 	}
 
 	public static void Save(PlayerData playerData)
