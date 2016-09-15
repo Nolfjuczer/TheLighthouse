@@ -88,7 +88,11 @@ public class ActiveController : Singleton<ActiveController>
 			float progres = Mathf.Clamp01(timer / cooldown);
 			if( GUIController.Instance != null) GUIController.Instance.UpdateActiveGUI(activeType, progres);
             else
-                Debug.Log("null :D");
+			{
+#if UNITY_EDITOR
+				Debug.Log("null :D");
+#endif
+			}
 		}
 
 		public void Activate()

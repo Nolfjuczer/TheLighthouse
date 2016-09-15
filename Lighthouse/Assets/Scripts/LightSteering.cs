@@ -21,9 +21,9 @@ public class LightSteering : MonoBehaviour
         set { _activeOn = value; }
     }
 
-    private Vector3 _largeScale = new Vector3(0.7f,0.58f,1f);
-    private Vector3 _normalScale = new Vector3(0.4f,0.58f,1f);
-    private Vector3 _smallScale = new Vector3(0.1f, 0.58f, 1f);
+    private Vector3 _largeScale = new Vector3(0.7f,1.0f,1f);
+    private Vector3 _normalScale = new Vector3(0.4f,1.0f,1f);
+    private Vector3 _smallScale = new Vector3(0.1f, 1.0f, 1f);
 
 	private bool _lightEnlarge = false;
 	private bool _lightShrink = false;
